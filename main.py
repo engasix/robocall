@@ -1,11 +1,14 @@
 from contextlib import asynccontextmanager
+from typing import Optional
 from fastapi import FastAPI, Request, Depends
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
+import config
 import database
-from routers import orders
+from routers import orders, auth
 
 
 @asynccontextmanager
@@ -16,28 +19,65 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Robocall Order Confirmation System", lifespan=lifespan)
 
-app.include_router(orders.router)
+app.add_middleware(SessionMiddleware, secret_key=config.SECRET_KEY)
 
 app.mount("/audio", StaticFiles(directory="audio"), name="audio")
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+app.include_router(auth.router)
+app.include_router(orders.router)
 
 templates = Jinja2Templates(directory="templates")
 
 
 @app.get("/", response_class=HTMLResponse)
-def index(request: Request, db: Session = Depends(database.get_db)):
-    stores = db.query(database.Store).all()
-    return templates.TemplateResponse(request=request, name="index.html", context={"stores": stores})
+def index(request: Request):
+    if request.session.get("store"):
+        return RedirectResponse(url="/dashboard", status_code=302)
+    return RedirectResponse(url="/login", status_code=302)
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
-def dashboard(request: Request):
-    return templates.TemplateResponse(request=request, name="dashboard.html", context={})
+def dashboard(request: Request, session_store=Depends(auth.require_auth)):
+    if isinstance(session_store, RedirectResponse):
+        return session_store
+    return templates.TemplateResponse(
+        request=request,
+        name="dashboard.html",
+        context={"store": session_store},
+    )
+
+
+@app.get("/place-order", response_class=HTMLResponse)
+def place_order_page(request: Request, session_store=Depends(auth.require_auth)):
+    if isinstance(session_store, RedirectResponse):
+        return session_store
+    db = next(database.get_db())
+    stores = db.query(database.Store).all()
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"stores": stores, "store": session_store},
+    )
 
 
 @app.get("/api/orders")
-def get_orders(db: Session = Depends(database.get_db)):
-    orders = db.query(database.Order).order_by(database.Order.created_at.desc()).all()
+def get_orders(
+    request: Request,
+    store_id: Optional[int] = None,
+    session_store=Depends(auth.require_auth),
+    db: Session = Depends(database.get_db),
+):
+    if isinstance(session_store, RedirectResponse):
+        return session_store
+
+    query = db.query(database.Order)
+
+    # Future: uncomment to filter by store
+    # if store_id:
+    #     query = query.filter(database.Order.store_id == store_id)
+
+    result = query.order_by(database.Order.created_at.desc()).all()
     return [
         {
             "id": o.id,
@@ -48,5 +88,5 @@ def get_orders(db: Session = Depends(database.get_db)):
             "status": o.status,
             "created_at": o.created_at.isoformat() if o.created_at else None,
         }
-        for o in orders
+        for o in result
     ]

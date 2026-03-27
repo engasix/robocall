@@ -1,0 +1,28 @@
+{
+  "name": "robocall",
+  "version": "1.0.0",
+  "description": "An automated voice call system for COD (Cash on Delivery) e-commerce orders. When a customer places an order, the system calls them with a personalized AI-generated voice message and captures their confirmation via keypress.",
+  "main": "index.js",
+  "scripts": {
+    "css:build": "tailwindcss -i static/css/input.css -o static/css/style.css --minify",
+    "css:watch": "tailwindcss -i static/css/input.css -o static/css/style.css --watch"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/engasix/robocall.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/engasix/robocall/issues"
+  },
+  "homepage": "https://github.com/engasix/robocall#readme",
+  "devDependencies": {
+    "tailwindcss": "^4.2.2"
+  },
+  "dependencies": {
+    "@tailwindcss/cli": "^4.2.2"
+  }
+}

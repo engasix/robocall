@@ -21,9 +21,10 @@ class Store(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     business_name = Column(String(255), nullable=False)
-    email = Column(String(255), nullable=False)
+    email = Column(String(255), nullable=False, unique=True)
     phone = Column(String(20), nullable=False)
     language = Column(Enum("urdu", "english"), nullable=False, default="english")
+    password_hash = Column(String(255), nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -64,3 +65,9 @@ class OrderAmount(Base):
 
 def init_db():
     Base.metadata.create_all(bind=engine)
+    # Add password_hash column if it doesn't exist (safe migration)
+    # with engine.connect() as conn:
+    #     conn.execute(
+    #         "ALTER TABLE stores ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255)"
+    #     )
+    #     conn.commit()

@@ -15,4 +15,6 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
 
+SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
+
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio")
