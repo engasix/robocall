@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -16,40 +15,40 @@
   <div class="w-full max-w-md">
 
     <!-- Logo -->
-    <div class="flex items-center justify-center gap-2.5 mb-8">
+    <div class="flex items-center justify-center gap-3 mb-8">
       <div class="logo-icon">
-        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
         </svg>
       </div>
-      <span class="font-bold text-xl text-gray-900 tracking-tight">Robocall</span>
+      <span class="text-xl font-bold text-stone-900 tracking-tight">Robocall</span>
     </div>
 
     <!-- Card -->
     <div class="card">
 
       <div class="mb-7">
-        <h1 class="text-2xl font-bold text-gray-900">Place Your Order</h1>
-        <p class="text-sm text-gray-500 mt-1">Fill in your details and we'll call you to confirm.</p>
+        <h1 class="text-2xl font-bold text-stone-900">Place Your Order</h1>
+        <p class="text-sm text-stone-400 mt-1">Fill in your details and we'll call you to confirm.</p>
       </div>
 
       <!-- Success -->
       <div id="success-msg" class="alert-success mb-6 hidden">
-        <svg class="w-4 h-4 text-green-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="alert-success-icon w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         <div>
-          <p class="text-sm font-medium text-green-800">Order placed successfully!</p>
-          <p class="text-sm text-green-600 mt-0.5">Expect a confirmation call shortly.</p>
+          <p class="alert-success-title text-sm font-semibold">Order placed successfully!</p>
+          <p class="alert-success-text text-sm mt-0.5">Expect a confirmation call shortly.</p>
         </div>
       </div>
 
       <!-- Error -->
       <div id="error-msg" class="alert-error mb-6 hidden">
-        <svg class="w-4 h-4 text-red-500 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="alert-error-icon w-4 h-4 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <p id="error-text" class="text-sm text-red-700">Something went wrong. Please try again.</p>
+        <p id="error-text" class="alert-error-text text-sm">Something went wrong. Please try again.</p>
       </div>
 
       <form id="order-form" class="space-y-5">
@@ -78,7 +77,7 @@
         <div>
           <label class="input-label">Order Amount</label>
           <div class="relative">
-            <span class="absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-gray-400 select-none">PKR</span>
+            <span class="input-prefix-label absolute left-4 top-1/2 -translate-y-1/2 text-sm font-semibold select-none">PKR</span>
             <input type="number" id="order_amount" name="order_amount"
               placeholder="0" min="1" required class="input-field-prefix" />
           </div>
@@ -88,8 +87,8 @@
 
       </form>
 
-      <p class="mt-5 text-center text-xs text-gray-400">
-        <a href="/dashboard" class="hover:text-indigo-600 transition-colors font-medium">← Back to dashboard</a>
+      <p class="mt-5 text-center text-xs text-stone-400">
+        <a href="/dashboard" class="font-medium hover:text-[#33302B] transition-colors">← Back to dashboard</a>
       </p>
 
     </div>

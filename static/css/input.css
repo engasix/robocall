@@ -1,11 +1,34 @@
 @import "tailwindcss";
 
+@theme {
+  --color-cream-50:    #FAF7F3;
+  --color-cream-100:   #F3EDE4;
+  --color-cream-200:   #E8DDD2;
+  --color-charcoal-50:  #F2F1EF;
+  --color-charcoal-100: #D6D4CF;
+  --color-charcoal-400: #7A7770;
+  --color-charcoal-500: #33302B;
+  --color-charcoal-600: #252320;
+  --color-charcoal-700: #181714;
+  --color-success-50:   #F0FDF4;
+  --color-success-200:  #BBF7D0;
+  --color-success-700:  #15803D;
+  --color-danger-50:    #FFF5F5;
+  --color-danger-200:   #FED7D7;
+  --color-danger-700:   #B91C1C;
+  --color-amber-50:     #FFFBEB;
+  --color-amber-600:    #D97706;
+  --color-amber-700:    #B45309;
+  --font-sans: 'Inter', sans-serif;
+}
+
 /* ─── Base ─────────────────────────────────────────────── */
 
 @layer base {
   body {
-    font-family: 'Inter', sans-serif;
-    @apply bg-gray-50 text-gray-900;
+    font-family: var(--font-sans);
+    background-color: var(--color-cream-50);
+    color: #292524;
   }
 }
 
@@ -13,116 +36,230 @@
 
 @layer components {
 
-  /* Logo icon */
+  /* ── Logo ── */
   .logo-icon {
-    @apply w-9 h-9 bg-indigo-600 rounded-xl flex items-center justify-center;
+    @apply w-9 h-9 rounded-xl flex items-center justify-center;
+    background-color: var(--color-charcoal-500);
   }
 
-  /* Auth / form card */
+  /* ── Cards ── */
   .card {
-    @apply bg-white rounded-2xl shadow-sm border border-gray-200 p-8;
+    @apply bg-white rounded-2xl p-8;
+    border: 1px solid var(--color-cream-200);
+    box-shadow: 0 1px 4px rgba(120, 80, 40, 0.06);
   }
 
-  /* Form inputs */
+  /* ── Form inputs ── */
+  .input-label {
+    @apply block text-sm font-medium mb-1.5;
+    color: #57534E;
+  }
+
   .input-field {
-    @apply block w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3
-           text-sm text-gray-900 placeholder-gray-400 shadow-sm
-           transition
-           focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20;
+    @apply block w-full rounded-xl px-4 py-3 text-sm transition;
+    background: var(--color-cream-50);
+    border: 1.5px solid var(--color-cream-200);
+    color: #292524;
+    outline: none;
+  }
+  .input-field::placeholder { color: #A8A29E; }
+  .input-field:focus {
+    background: #fff;
+    border-color: var(--color-charcoal-400);
+    box-shadow: 0 0 0 3px rgba(51, 48, 43, 0.12);
   }
 
   .input-field-prefix {
-    @apply block w-full rounded-xl border border-gray-200 bg-gray-50 pl-14 pr-4 py-3
-           text-sm text-gray-900 placeholder-gray-400 shadow-sm
-           transition
-           focus:border-indigo-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/20;
+    @apply block w-full rounded-xl pl-14 pr-4 py-3 text-sm transition;
+    background: var(--color-cream-50);
+    border: 1.5px solid var(--color-cream-200);
+    color: #292524;
+    outline: none;
+  }
+  .input-field-prefix::placeholder { color: #A8A29E; }
+  .input-field-prefix:focus {
+    background: #fff;
+    border-color: var(--color-charcoal-400);
+    box-shadow: 0 0 0 3px rgba(51, 48, 43, 0.12);
   }
 
-  .input-label {
-    @apply block text-sm font-medium text-gray-700 mb-1.5;
-  }
-
-  /* Buttons */
+  /* ── Buttons ── */
   .btn-primary {
-    @apply w-full rounded-xl bg-indigo-600 px-4 py-3 text-sm font-semibold text-white shadow-sm
-           hover:bg-indigo-700
-           focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2
-           disabled:opacity-50 disabled:cursor-not-allowed
-           transition-colors;
+    @apply w-full rounded-xl px-4 py-3 text-sm font-semibold text-white transition-all
+           disabled:opacity-50 disabled:cursor-not-allowed;
+    background-color: var(--color-charcoal-500);
+    box-shadow: 0 4px 14px rgba(51, 48, 43, 0.25);
+  }
+  .btn-primary:hover { background-color: var(--color-charcoal-600); }
+
+  .btn-nav-primary {
+    @apply rounded-xl px-4 py-2 text-sm font-semibold text-white transition-all;
+    background-color: var(--color-charcoal-500);
+  }
+  .btn-nav-primary:hover { background-color: var(--color-charcoal-600); }
+
+  .btn-ghost {
+    @apply rounded-xl px-3 py-2 text-sm transition-all;
+    color: #78716C;
+    border: 1px solid var(--color-cream-200);
+  }
+  .btn-ghost:hover {
+    background-color: var(--color-cream-100);
+    color: #292524;
   }
 
-  .btn-secondary {
-    @apply rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-500
-           hover:bg-gray-50 hover:text-gray-700 transition-colors;
-  }
-
-  .btn-nav {
-    @apply rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white
-           hover:bg-indigo-700 transition-colors;
-  }
-
-  /* Alert banners */
+  /* ── Alert banners ── */
   .alert-success {
-    @apply rounded-xl px-4 py-3.5 flex items-start gap-3 border bg-green-50 border-green-200;
+    @apply rounded-xl px-4 py-3.5 flex items-start gap-3;
+    background: var(--color-success-50);
+    border: 1px solid var(--color-success-200);
+  }
+  .alert-success-icon,
+  .alert-success-title,
+  .alert-success-text {
+    color: var(--color-success-700);
   }
 
   .alert-error {
-    @apply rounded-xl px-4 py-3.5 flex items-start gap-3 border bg-red-50 border-red-200;
+    @apply rounded-xl px-4 py-3.5 flex items-start gap-3;
+    background: var(--color-danger-50);
+    border: 1px solid var(--color-danger-200);
+  }
+  .alert-error-icon,
+  .alert-error-text {
+    color: var(--color-danger-700);
   }
 
-  /* Stat cards */
-  .stat-card {
-    @apply bg-white rounded-2xl border p-5 shadow-sm;
-  }
-
-  .stat-icon {
-    @apply w-8 h-8 rounded-lg flex items-center justify-center;
-  }
-
-  /* Status badges */
-  .badge-pending {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 bg-amber-50 text-amber-600 ring-amber-200;
-  }
-
-  .badge-confirmed {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 bg-green-50 text-green-700 ring-green-200;
-  }
-
-  .badge-cancelled {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 bg-red-50 text-red-600 ring-red-200;
-  }
-
-  .badge-no-response {
-    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ring-1 bg-gray-100 text-gray-500 ring-gray-200;
-  }
-
-  .badge-store {
-    @apply inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5
-           text-xs font-medium text-indigo-600 ring-1 ring-indigo-100;
-  }
-
-  /* Table */
-  .table-header {
-    @apply text-left px-6 py-3.5 text-xs font-semibold text-gray-400 uppercase tracking-wide;
-  }
-
-  .table-cell {
-    @apply px-6 py-4;
-  }
-
-  /* Navbar */
+  /* ── Navbar ── */
   .navbar {
-    @apply bg-white border-b border-gray-200 sticky top-0 z-10;
+    @apply bg-white sticky top-0 z-10;
+    border-bottom: 1px solid var(--color-cream-200);
   }
 
   .navbar-inner {
     @apply max-w-7xl mx-auto px-6 h-16 flex items-center justify-between;
   }
 
-  /* intl-tel-input overrides */
+  /* ── Stat cards ── */
+  .stat-card {
+    @apply bg-white rounded-2xl p-5;
+    border: 1px solid var(--color-cream-200);
+    box-shadow: 0 1px 4px rgba(120, 80, 40, 0.05);
+  }
+
+  .stat-icon {
+    @apply w-9 h-9 rounded-xl flex items-center justify-center;
+  }
+
+  /* ── Table ── */
+  .table-header {
+    @apply text-left px-6 py-3.5 text-xs font-semibold uppercase tracking-wide;
+    color: #A8A29E;
+  }
+
+  .table-cell {
+    @apply px-6 py-4;
+  }
+
+  /* ── Badges ── */
+  .badge-pending {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+    background: #FFF7ED;
+    color: #C2410C;
+    border: 1px solid #FED7AA;
+  }
+
+  .badge-confirmed {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+    background: #F0FDF4;
+    color: #15803D;
+    border: 1px solid #BBF7D0;
+  }
+
+  .badge-cancelled {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+    background: #FFF5F5;
+    color: #C53030;
+    border: 1px solid #FED7D7;
+  }
+
+  .badge-no-response {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium;
+    background: var(--color-cream-100);
+    color: #78716C;
+    border: 1px solid var(--color-cream-200);
+  }
+
+  .badge-store {
+    @apply inline-flex items-center rounded-lg px-2.5 py-1 text-xs font-medium;
+    background: var(--color-charcoal-50);
+    color: var(--color-charcoal-500);
+    border: 1px solid var(--color-charcoal-100);
+  }
+
+  /* ── Live dot ── */
+  .live-dot {
+    display: inline-block;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 9999px;
+    background: var(--color-success-700);
+  }
+
+  /* ── Store chip ── */
+  .store-chip {
+    background: var(--color-cream-100);
+  }
+
+  /* ── Stat icon backgrounds ── */
+  .stat-icon-cream { background: var(--color-cream-100); }
+  .stat-icon-amber { background: var(--color-amber-50); }
+  .stat-icon-success { background: var(--color-success-50); }
+  .stat-icon-danger { background: var(--color-danger-50); }
+
+  /* ── Pending stat colors ── */
+  .text-amber-700 { color: var(--color-amber-700); }
+  .text-amber-600 { color: var(--color-amber-600); }
+
+  /* ── Table card ── */
+  .table-card {
+    background: white;
+    border-radius: 1rem;
+    overflow: hidden;
+    border: 1px solid var(--color-cream-200);
+    box-shadow: 0 1px 4px rgba(120, 80, 40, 0.05);
+  }
+
+  .table-title-bar {
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--color-cream-100);
+  }
+
+  .table-head-row {
+    background: var(--color-cream-50);
+    border-bottom: 1px solid var(--color-cream-100);
+  }
+
+  .table-data-row {
+    border-top: 1px solid var(--color-cream-100);
+  }
+
+  /* ── Status dots ── */
+  .dot-pending    { background: var(--color-amber-600); }
+  .dot-confirmed  { background: #22C55E; }
+  .dot-cancelled  { background: var(--color-danger-700); }
+  .dot-no-response { background: var(--color-charcoal-400); }
+
+  /* ── Input prefix label ── */
+  .input-prefix-label { color: var(--color-charcoal-400); }
+
+  /* ── intl-tel-input overrides ── */
   .iti { width: 100%; }
   .iti__search-input { font-size: 0.875rem; }
-  .iti__selected-dial-code { font-size: 0.875rem; color: #111827; padding: 0; }
+  .iti__selected-dial-code { font-size: 0.875rem; color: #292524; padding: 0; }
   .iti__selected-country { padding: 0 10px; border-radius: 0.75rem 0 0 0.75rem; background: transparent; }
   .iti__flag-container { border-radius: 0.75rem 0 0 0.75rem; }
 }
