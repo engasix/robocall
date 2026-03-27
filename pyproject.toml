@@ -4,4 +4,15 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "twilio",
+    "pydub",
+    "elevenlabs",
+    "sqlalchemy",
+    "pymysql",
+    "python-dotenv",
+    "nameparser",
+    "jinja2>=3.1.6",
+]
