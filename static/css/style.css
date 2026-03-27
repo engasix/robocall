@@ -1,6 +1,7 @@
 .iti { width: 100%; }
-.iti__search-input { font-size: 0.975rem; }
-.iti__selected-dial-code { font-size: 0.975rem; color: #111827; padding: 0px; }
-.iti__selected-country { padding: 0 8px; }
+.iti__search-input { font-size: 0.875rem; }
+.iti__selected-dial-code { font-size: 0.875rem; color: #111827; padding: 0; }
+.iti__selected-country { padding: 0 10px; border-radius: 0.75rem 0 0 0.75rem; background: transparent; }
+.iti__flag-container { border-radius: 0.75rem 0 0 0.75rem; }
 
-input { font-size: 0.975rem !important; color: #111827; }
+input[type="tel"] { font-size: 0.875rem !important; color: #111827; }
