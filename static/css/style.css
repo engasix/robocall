@@ -1,0 +1,6 @@
+.iti { width: 100%; }
+.iti__search-input { font-size: 0.975rem; }
+.iti__selected-dial-code { font-size: 0.975rem; color: #111827; padding: 0px; }
+.iti__selected-country { padding: 0 8px; }
+
+input { font-size: 0.975rem !important; color: #111827; }

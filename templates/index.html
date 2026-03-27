@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Place Order</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/intl-tel-input@25.12.4/build/css/intlTelInput.css" />
+  <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body class="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+
+  <div class="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-200 p-8">
+
+    <div class="mb-8">
+      <h1 class="text-2xl font-bold text-gray-900">Place Your Order</h1>
+      <p class="text-sm text-gray-500 mt-1">Fill in your details and we'll call you to confirm.</p>
+    </div>
+
+    <!-- Success message (hidden by default) -->
+    <div id="success-msg"
+      class="hidden mb-6 rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+      Your order has been placed. You will receive a call shortly.
+    </div>
+
+    <!-- Error message (hidden by default) -->
+    <div id="error-msg" class="hidden mb-6 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+      Something went wrong. Please try again.
+    </div>
+
+    <form id="order-form" class="space-y-5">
+
+      <div>
+        <label for="customer_name" class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+        <input type="text" id="customer_name" name="customer_name" placeholder="e.g. Muhammad Ali" required
+          class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label for="phone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+        <input type="tel" id="phone" name="phone" required
+          class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+      </div>
+
+      <div>
+        <label for="store_id" class="block text-sm font-medium text-gray-700 mb-1">Store</label>
+        <select id="store_id" name="store_id" required
+          class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500">
+          <option value="" disabled selected>Select a store</option>
+          {% for store in stores %}
+          <option value="{{ store.id }}">{{ store.business_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div>
+        <label for="order_amount" class="block text-sm font-medium text-gray-700 mb-1">Order Amount (PKR)</label>
+        <input type="number" id="order_amount" name="order_amount" placeholder="e.g. 1500" min="1" required
+          class="block w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm text-gray-900 placeholder-gray-400 shadow-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500" />
+      </div>
+
+      <button type="submit" id="submit-btn"
+        class="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
+        Place Order
+      </button>
+
+    </form>
+
+    <p class="mt-6 text-center text-xs text-gray-400">
+      <a href="/dashboard" class="underline hover:text-gray-600">View order dashboard →</a>
+    </p>
+
+  </div>
+
+  <script>
+    const form = document.getElementById('order-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const successMsg = document.getElementById('success-msg');
+    const errorMsg = document.getElementById('error-msg');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Placing order...';
+      successMsg.classList.add('hidden');
+      errorMsg.classList.add('hidden');
+
+      const payload = {
+        customer_name: form.customer_name.value.trim(),
+        phone: iti.getNumber(),
+        store_id: parseInt(form.store_id.value),
+        order_amount: parseFloat(form.order_amount.value),
+      };
+
+      try {
+        const res = await fetch('/place-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          successMsg.classList.remove('hidden');
+          form.reset();
+        } else {
+          const data = await res.json();
+          errorMsg.textContent = data.detail || 'Something went wrong. Please try again.';
+          errorMsg.classList.remove('hidden');
+        }
+      } catch {
+        errorMsg.classList.remove('hidden');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Place Order';
+      }
+    });
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/intl-tel-input@25.12.4/build/js/intlTelInput.min.js"></script>
+  <script>
+    const phoneInput = document.querySelector("#phone");
+    const iti = window.intlTelInput(phoneInput, {
+      initialCountry: "pk",
+      countryOrder: ["pk", "ae", "gb", "us"],
+      separateDialCode: true,
+      loadUtils: () => import("https://cdn.jsdelivr.net/npm/intl-tel-input@25.12.4/build/js/utils.js"),
+    });
+  </script>
+
+</body>
+
+</html>

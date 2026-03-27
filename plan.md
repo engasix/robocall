@@ -88,11 +88,12 @@ robocall/
 
 ## Implementation Phases
 
-### Phase 1 — Project Setup
-- [ ] Initialize FastAPI project
-- [ ] Setup `.env` with Twilio & ElevenLabs credentials
-- [ ] Setup MySQL database with `stores`, `orders`, `customer_names` and `order_amounts` tables
-- [ ] Install dependencies: `fastapi`, `uvicorn`, `twilio`, `pydub`, `elevenlabs`, `sqlalchemy`, `pymysql`, `python-dotenv`, `nameparser`
+### Phase 1 — Project Setup ✅
+- [x] Initialize FastAPI project
+- [x] Setup `.env` with Twilio & ElevenLabs credentials
+- [x] Setup MySQL database with `stores`, `orders`, `customer_names` and `order_amounts` tables
+- [x] Install dependencies: `fastapi`, `uvicorn`, `twilio`, `pydub`, `elevenlabs`, `sqlalchemy`, `pymysql`, `python-dotenv`, `nameparser`
+- [x] Migrated to `uv` for package management (`pyproject.toml` as source of truth)
 
 **stores Table Schema:**
 ```
@@ -138,12 +139,13 @@ id, amount, created_at
 
 ---
 
-### Phase 2 — Frontend (Order Form + Dashboard)
-- [ ] Build `index.html` — order placement form
-  - Fields: Customer Name, Phone Number, Store Name, Order Amount
+### Phase 2 — Frontend (Order Form + Dashboard) ✅
+- [x] Build `index.html` — order placement form
+  - Fields: Customer Name, Phone Number (with country flag picker via intl-tel-input), Store, Order Amount
   - On submit: POST to `/place-order`, show "You will receive a call shortly"
-- [ ] Build `dashboard.html` — live order status table
-  - Columns: Order ID, Customer Name, Phone, Amount, Status, Time
+- [x] Build `dashboard.html` — live order status table
+  - Columns: Order ID, Customer Name, Phone, Store, Amount, Status, Time
+  - Stats row: Total / Pending / Confirmed / Cancelled counts
   - Auto-refresh every 5 seconds to show live status updates
 
 ---
@@ -208,18 +210,18 @@ id, amount, created_at
 
 ---
 
-### Phase 7 — Order Placement Endpoint
-- [ ] `POST /place-order`:
+### Phase 7 — Order Placement Endpoint (partial)
+- [x] `POST /place-order`:
   1. Validate input
   2. Save order to DB with status `pending`
-  3. Trigger `call_service.trigger_call(order)` asynchronously (background task)
-  4. Return order confirmation to frontend
+  3. Return order confirmation to frontend
+- [ ] Trigger `call_service.trigger_call(order)` asynchronously (background task) — pending Phase 5
 
 ---
 
-### Phase 8 — Dashboard & Polish
-- [ ] Wire up dashboard with live status
-- [ ] Add status color coding (pending=yellow, confirmed=green, cancelled=red)
+### Phase 8 — Dashboard & Polish (partial)
+- [x] Wire up dashboard with live status (`GET /api/orders` polled every 5s)
+- [x] Add status color coding (pending=yellow, confirmed=green, cancelled=red, no_response=gray)
 - [ ] Clean up temp call audio files after call ends
 - [ ] Test full end-to-end flow
 
