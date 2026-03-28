@@ -23,45 +23,47 @@ A demo system where a customer places a COD order on a webpage, and an AI voice 
 
 ```
 robocall/
-├── main.py                   # FastAPI app entry point
-├── config.py                 # Environment variables & settings
-├── database.py               # MySQL models & connection
-├── generate_static_audio.py  # One-time script: clears audio, truncates DB, regenerates static
-├── requirements.txt
-├── .env                      # API keys (Twilio, ElevenLabs)
+├── main.py                   # Entry point — starts API + Demo (and future services)
+├── config.py                 # Shared environment variables & settings
+├── database.py               # Shared MySQL models & connection
+├── generate_static_audio.py  # Reset script: clears all audio, truncates DB, regenerates static
+├── .env                      # API keys (never committed)
 ├── plan.md
 │
-├── routers/
-│   ├── orders.py             # POST /place-order, GET /api/orders
-│   └── auth.py               # GET/POST /login, GET /logout
+├── api/                      # Core API — all business logic
+│   ├── main.py               # FastAPI app (port 8001)
+│   ├── routers/
+│   │   └── orders.py         # POST /orders/process
+│   └── services/
+│       ├── tts.py            # ElevenLabs TTS generation & caching
+│       ├── audio_stitcher.py # Audio stitching with pydub
+│       └── name_utils.py     # Pakistani name extraction logic
 │
-├── services/
-│   ├── tts.py                # ElevenLabs TTS generation & caching
-│   ├── audio_stitcher.py     # Audio stitching with pydub
-│   ├── name_utils.py         # Pakistani name extraction logic
-│   └── call_service.py       # Twilio outbound call trigger (Phase 5)
+├── demo/                     # Demo app — UI only, delegates to API
+│   ├── main.py               # FastAPI app (port 8000)
+│   ├── routers/
+│   │   ├── auth.py           # GET/POST /login, GET /logout
+│   │   └── orders.py         # POST /place-order → calls API
+│   ├── templates/
+│   │   ├── login.html
+│   │   ├── index.html
+│   │   └── dashboard.html
+│   └── static/css/
+│       ├── input.css         # Tailwind v4 source
+│       └── style.css         # Compiled output
 │
-├── audio/
-│   ├── static/
-│   │   ├── urdu/             # key_prompt, confirmed, cancelled, no_response
-│   │   └── english/          # key_prompt, confirmed, cancelled, no_response
-│   ├── stores/               # Per-store sentence audio (store_id_language.mp3)
-│   ├── names/
-│   │   ├── urdu/             # Cached greeting+name audio per customer
-│   │   └── english/
-│   ├── amounts/
-│   │   ├── urdu/             # Cached amount audio (amount.mp3)
-│   │   └── english/
-│   └── calls/                # Final stitched call audio per order (order_id.mp3)
-│
-├── static/css/
-│   ├── input.css             # Tailwind v4 source
-│   └── style.css             # Compiled output
-│
-└── templates/
-    ├── login.html            # Store login page
-    ├── index.html            # Order placement form
-    └── dashboard.html        # Live order status dashboard
+└── audio/                    # Shared generated audio (gitignored)
+    ├── static/
+    │   ├── urdu/             # key_prompt, confirmed, cancelled, no_response
+    │   └── english/
+    ├── stores/               # Per-store sentences — both languages for every store
+    ├── names/
+    │   ├── urdu/             # Cached greeting+name per customer first name
+    │   └── english/
+    ├── amounts/
+    │   ├── urdu/             # Cached amount audio
+    │   └── english/
+    └── calls/                # Final stitched call audio per order
 ```
 
 ---
@@ -69,11 +71,12 @@ robocall/
 ## Implementation Phases
 
 ### Phase 1 — Project Setup ✅
-- [x] Initialize FastAPI project
+- [x] Initialize FastAPI project with `uv` package manager
 - [x] Setup `.env` with Twilio & ElevenLabs credentials
-- [x] Setup MySQL database with `stores`, `orders`, `customer_names` and `order_amounts` tables
-- [x] Install dependencies: `fastapi`, `uvicorn`, `twilio`, `pydub`, `elevenlabs`, `sqlalchemy`, `pymysql`, `python-dotenv`, `num2words`
-- [x] Migrated to `uv` for package management (`pyproject.toml` as source of truth)
+- [x] Setup MySQL database with `stores`, `orders`, `customer_names`, `order_amounts` tables
+- [x] Install all dependencies (`fastapi`, `uvicorn`, `twilio`, `pydub`, `elevenlabs`, `sqlalchemy`, `pymysql`, `python-dotenv`, `num2words`, `bcrypt`, etc.)
+- [x] Restructured into `api/` and `demo/` separation with shared root-level config and database
+- [x] Root `main.py` starts all services together
 
 **stores Table Schema:**
 ```
@@ -97,35 +100,35 @@ id, store_id (FK → stores), customer_name, phone, order_amount, status (pendin
   - Stats row: Total / Pending / Confirmed / Cancelled counts
   - Auto-refresh every 5 seconds
 - [x] Tailwind CSS v4 with warm charcoal (`#33302B`) color theme
-- [x] All styles in `input.css` — zero inline styles in HTML templates
+- [x] Zero inline styles — all styling in `input.css` component classes
 
 ---
 
 ### Phase 3 — TTS Audio Setup ✅
-- [x] Write `services/tts.py` to call ElevenLabs API (`eleven_multilingual_v2` model)
-- [x] Generate shared static segments in both languages:
+- [x] `api/services/tts.py` — ElevenLabs integration (`eleven_multilingual_v2` model)
+- [x] Shared static segments generated in both languages:
   - `audio/static/urdu/` — key_prompt, confirmed, cancelled, no_response (proper Urdu script)
-  - `audio/static/english/` — same segments in English
-- [x] Per-store sentence audio generated at setup time:
+  - `audio/static/english/` — same in English
+- [x] Per-store sentence audio — **both languages generated for every store** regardless of current language setting:
   - Urdu: `"{store_name} پر آرڈر دینے کا شکریہ، آپ کے آرڈر کی رقم ہے"`
   - English: `"Thanks for placing order on {store_name}, your order amount is"`
-- [x] Greeting + name as single TTS call (cached per first name):
+- [x] Greeting + name as single TTS call (cached per first name per language):
   - Urdu: `"السلام علیکم {first_name}"`
   - English: `"Hello {first_name}"`
-- [x] Amount audio cached per unique amount using `num2words` for English, Urdu script words for Urdu
-- [x] `generate_static_audio.py` — full reset script: clears all audio, truncates DB tables, regenerates static + store sentences
+- [x] Amount audio cached per unique amount — `num2words` for English, Urdu script for Urdu
+- [x] `generate_static_audio.py` — full reset: clears all audio, truncates DB (except stores), regenerates everything
 
 ---
 
 ### Phase 4 — Audio Stitching Service ✅
-- [x] Write `services/audio_stitcher.py` using `pydub`
+- [x] `api/services/audio_stitcher.py` using `pydub`
 - [x] `build_call_audio(order_id, customer_name, store_id, store_name, order_amount, language)`:
   1. Generate/retrieve greeting+name audio (cached per first name)
   2. Load pre-generated store sentence
   3. Generate/retrieve amount audio (cached per amount)
   4. Load shared key_prompt static segment
   5. Concatenate with natural pauses → export as `audio/calls/{order_id}.mp3`
-- [x] Stitching triggered as FastAPI `BackgroundTask` on order placement (returns instantly to user)
+- [x] Triggered as FastAPI `BackgroundTask` — order response returns instantly
 
 **Call Script Flow:**
 ```
@@ -138,7 +141,7 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 ---
 
 ### Phase 5 — Calling Service (Twilio Integration)
-- [ ] Write `services/call_service.py`
+- [ ] Write `api/services/call_service.py`
 - [ ] `trigger_call(order_id, phone)`:
   - Serve stitched MP3 via public URL
   - Initiate Twilio outbound call with TwiML:
@@ -148,12 +151,13 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
       <Gather numDigits="1" action="/webhook/keypress/{order_id}" />
     </Response>
     ```
-- [ ] Wire `trigger_call()` into `process_order()` background task after `build_call_audio()`
+- [ ] Wire `trigger_call()` into `api/routers/orders.py` after `build_call_audio()`
 
 ---
 
 ### Phase 6 — Twilio Webhooks
-- [ ] `POST /webhook/keypress/{order_id}` — handle digit press:
+- [ ] `api/routers/webhooks.py`
+- [ ] `POST /webhook/keypress/{order_id}`:
   - Digit `1` → status: `confirmed` → play `confirmed.mp3`
   - Digit `2` → status: `cancelled` → play `cancelled.mp3`
   - No input → status: `no_response` → play `no_response.mp3`
@@ -162,16 +166,17 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 ---
 
 ### Phase 7 — Order Placement Endpoint ✅
-- [x] `POST /place-order` — saves order, returns instantly, triggers background task
-- [x] `GET /api/orders` — returns all orders for dashboard (filter by store ready for future)
-- [x] Background task: `build_call_audio()` → TODO: `trigger_call()` (Phase 5)
+- [x] Demo `POST /place-order` — saves order to DB, returns instantly
+- [x] Demo background task calls `POST /orders/process` on the API via httpx
+- [x] API `POST /orders/process` — runs `build_call_audio()`, then triggers call (Phase 5)
+- [x] `GET /api/orders` — returns all orders for dashboard (store filter ready for future)
 
 ---
 
 ### Phase 8 — Dashboard & Polish (partial)
 - [x] Live order status dashboard with 5s polling
 - [x] Status badges: pending=amber, confirmed=green, cancelled=red, no_response=gray
-- [ ] Clean up temp call audio files after call ends
+- [ ] Clean up call audio files after call ends
 - [ ] End-to-end testing
 
 ---
@@ -182,12 +187,16 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 Customer places order on webpage
         │
         ▼
-Backend saves order (status: pending) → responds instantly
+Demo saves order to DB (status: pending) → responds instantly
         │
         ▼
-Background task:
-  1. Stitch audio: greeting+name → store sentence → amount → key prompt
-  2. Trigger Twilio outbound call (Phase 5)
+Demo background task → POST /orders/process to API
+        │
+        ▼
+API: build_call_audio() → greeting+name | store sentence | amount | key prompt
+        │
+        ▼
+API: trigger_call() → Twilio outbound call (Phase 5)
         │
         ▼
 Customer phone rings → answers
@@ -201,6 +210,22 @@ Audio plays (personalized message)
         │
         ▼
 Dashboard updates live
+```
+
+---
+
+## Running the Project
+
+```bash
+# Start all services
+uv run main.py
+
+# Or individually:
+uv run uvicorn api.main:app --port 8001 --reload   # API
+uv run uvicorn demo.main:app --port 8000 --reload  # Demo
+
+# Regenerate all audio (resets DB tables except stores)
+uv run generate_static_audio.py
 ```
 
 ---

@@ -45,7 +45,8 @@ def generate_all_store_segments() -> None:
     try:
         stores = db.query(Store).all()
         for store in stores:
-            generate_store_segment(store.id, store.business_name, store.language)
+            for language in ["urdu", "english"]:
+                generate_store_segment(store.id, store.business_name, language)
     finally:
         db.close()
 
