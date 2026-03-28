@@ -14,6 +14,7 @@ ELEVENLABS_VOICE_ID_ENGLISH = os.getenv("ELEVENLABS_VOICE_ID_ENGLISH")
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 BASE_URL = os.getenv("BASE_URL", "http://localhost:8000")
+API_URL  = os.getenv("API_URL",  "http://localhost:8001")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 

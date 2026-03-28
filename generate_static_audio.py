@@ -13,7 +13,7 @@ import shutil
 import config
 from sqlalchemy import text
 from database import SessionLocal, Store, engine
-from services.tts import generate_static_segments, generate_store_segment
+from api.services.tts import generate_static_segments, generate_store_segment
 
 AUDIO_SUBDIRS = ["static/english", "static/urdu", "stores", "names/english", "names/urdu",
                  "amounts/english", "amounts/urdu", "calls"]

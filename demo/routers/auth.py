@@ -6,7 +6,7 @@ import bcrypt
 import database
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="demo/templates")
 
 
 def require_auth(request: Request):

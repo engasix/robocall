@@ -2,8 +2,8 @@ import os
 import config
 from pydub import AudioSegment
 
-from services.tts import get_greeting_audio, get_store_segment_path, get_amount_audio, get_static_path
-from services.name_utils import extract_first_name
+from api.services.tts import get_greeting_audio, get_store_segment_path, get_amount_audio, get_static_path
+from api.services.name_utils import extract_first_name
 
 CALLS_DIR = os.path.join(config.AUDIO_DIR, "calls")
 

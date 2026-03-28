@@ -8,7 +8,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from sqlalchemy.orm import Session
 import config
 import database
-from routers import orders, auth
+from demo.routers import orders, auth
 
 
 @asynccontextmanager
@@ -17,17 +17,16 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title="Robocall Order Confirmation System", lifespan=lifespan)
+app = FastAPI(title="Robocall Demo", lifespan=lifespan)
 
 app.add_middleware(SessionMiddleware, secret_key=config.SECRET_KEY)
 
-app.mount("/audio", StaticFiles(directory="audio"), name="audio")
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="demo/static"), name="static")
 
 app.include_router(auth.router)
 app.include_router(orders.router)
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory="demo/templates")
 
 
 @app.get("/", response_class=HTMLResponse)
@@ -72,7 +71,6 @@ def get_orders(
         return session_store
 
     query = db.query(database.Order)
-
     # Future: uncomment to filter by store
     # if store_id:
     #     query = query.filter(database.Order.store_id == store_id)
