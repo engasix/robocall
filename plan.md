@@ -105,7 +105,7 @@ id, store_id (FK → stores), customer_name, phone, order_amount, status (pendin
 ---
 
 ### Phase 3 — TTS Audio Setup ✅
-- [x] `api/services/tts.py` — ElevenLabs integration (`eleven_multilingual_v2` model)
+- [x] `api/services/tts.py` — ElevenLabs integration (`eleven_v3` model)
 - [x] Shared static segments generated in both languages:
   - `audio/static/urdu/` — key_prompt, confirmed, cancelled, no_response (proper Urdu script)
   - `audio/static/english/` — same in English
@@ -115,8 +115,11 @@ id, store_id (FK → stores), customer_name, phone, order_amount, status (pendin
 - [x] Greeting + name as single TTS call (cached per first name per language):
   - Urdu: `"السلام علیکم {first_name}"`
   - English: `"Hello {first_name}"`
-- [x] Amount audio cached per unique amount — `num2words` for English, Urdu script for Urdu
-- [x] `generate_static_audio.py` — full reset: clears all audio, truncates DB (except stores), regenerates everything
+- [x] Amount audio with currency — custom Urdu number-to-words converter (e.g. `"تین ہزار روپے"`), `num2words` for English (e.g. `"three thousand rupees"`)
+- [x] DB-driven caching — `customer_names` and `order_amounts` tables track generated audio per language
+- [x] Configurable voice settings per language in `config.py` — speed, stability, similarity_boost, style, speaker_boost
+- [x] `generate_static_audio.py` — regenerates static and store audio (skips existing; `--fresh` flag clears all first)
+- [x] `manage_db.py` — separate DB management script: `migrate`, `truncate` (clears DB + audio cache), `drop`
 
 ---
 
@@ -140,14 +143,37 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ---
 
-### Phase 5 — Calling Service (Twilio Integration)
+### Phase 5 — Server Deployment
+- [ ] Provision a VPS (DigitalOcean / Vultr / AWS)
+- [ ] Install dependencies: Python, uv, MySQL, ffmpeg, Nginx
+- [ ] Configure Nginx as reverse proxy:
+  - `yourdomain.com` → Demo app (port 8000)
+  - `api.yourdomain.com` → API (port 8001)
+- [ ] Setup systemd services to keep API and Demo running
+- [ ] Configure firewall (ports 80, 443, 22)
+- [ ] Point domain DNS to server IP
+- [ ] Setup SSL via Let's Encrypt (HTTPS required for Twilio)
+- [ ] Set production `.env` with live credentials and `BASE_URL`, `API_URL`
+- [ ] Run `generate_static_audio.py` on server to populate audio files
+- [ ] Write `deploy.sh` — one-command deployer script:
+  - SSH into server
+  - Pull latest code from GitHub
+  - Install/sync dependencies (`uv sync`)
+  - Run DB migrations (`database.init_db()`)
+  - Rebuild Tailwind CSS (`npm run css:build`)
+  - Restart systemd services (API + Demo)
+  - Verify services are running
+
+---
+
+### Phase 6 — Calling Service (Twilio Integration)
 - [ ] Write `api/services/call_service.py`
 - [ ] `trigger_call(order_id, phone)`:
-  - Serve stitched MP3 via public URL
+  - Serve stitched MP3 via public URL (`BASE_URL/audio/calls/{order_id}.mp3`)
   - Initiate Twilio outbound call with TwiML:
     ```xml
     <Response>
-      <Play>https://yourdomain.com/audio/calls/{order_id}.mp3</Play>
+      <Play>https://api.yourdomain.com/audio/calls/{order_id}.mp3</Play>
       <Gather numDigits="1" action="/webhook/keypress/{order_id}" />
     </Response>
     ```
@@ -155,7 +181,7 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ---
 
-### Phase 6 — Twilio Webhooks
+### Phase 7 — Twilio Webhooks
 - [ ] `api/routers/webhooks.py`
 - [ ] `POST /webhook/keypress/{order_id}`:
   - Digit `1` → status: `confirmed` → play `confirmed.mp3`
@@ -165,15 +191,15 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ---
 
-### Phase 7 — Order Placement Endpoint ✅
+### Phase 8 — Order Placement Endpoint ✅
 - [x] Demo `POST /place-order` — saves order to DB, returns instantly
 - [x] Demo background task calls `POST /orders/process` on the API via httpx
-- [x] API `POST /orders/process` — runs `build_call_audio()`, then triggers call (Phase 5)
+- [x] API `POST /orders/process` — runs `build_call_audio()`, then triggers call (Phase 6)
 - [x] `GET /api/orders` — returns all orders for dashboard (store filter ready for future)
 
 ---
 
-### Phase 8 — Dashboard & Polish (partial)
+### Phase 9 — Dashboard & Polish (partial)
 - [x] Live order status dashboard with 5s polling
 - [x] Status badges: pending=amber, confirmed=green, cancelled=red, no_response=gray
 - [ ] Clean up call audio files after call ends
@@ -196,7 +222,7 @@ Demo background task → POST /orders/process to API
 API: build_call_audio() → greeting+name | store sentence | amount | key prompt
         │
         ▼
-API: trigger_call() → Twilio outbound call (Phase 5)
+API: trigger_call() → Twilio outbound call (Phase 6)
         │
         ▼
 Customer phone rings → answers

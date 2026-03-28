@@ -50,8 +50,8 @@ class CustomerName(Base):
     __tablename__ = "customer_names"
 
     id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String(255), nullable=False)
-    first_name = Column(String(100), nullable=False, unique=True)
+    first_name = Column(String(100), nullable=False)
+    language = Column(Enum("urdu", "english"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
@@ -59,7 +59,8 @@ class OrderAmount(Base):
     __tablename__ = "order_amounts"
 
     id = Column(Integer, primary_key=True, index=True)
-    amount = Column(Numeric(10, 2), nullable=False, unique=True)
+    amount = Column(Numeric(10, 2), nullable=False)
+    language = Column(Enum("urdu", "english"), nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
 
