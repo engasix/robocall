@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import database
+from services.audio_stitcher import build_call_audio
 
 router = APIRouter()
 
@@ -13,8 +14,22 @@ class OrderRequest(BaseModel):
     order_amount: float
 
 
+def process_order(order_id: int, customer_name: str, store_id: int,
+                  store_name: str, order_amount: float, language: str, phone: str):
+    build_call_audio(
+        order_id=order_id,
+        customer_name=customer_name,
+        store_id=store_id,
+        store_name=store_name,
+        order_amount=order_amount,
+        language=language,
+    )
+    # TODO: trigger Twilio call (Phase 5)
+
+
 @router.post("/place-order")
-def place_order(payload: OrderRequest, db: Session = Depends(database.get_db)):
+def place_order(payload: OrderRequest, background_tasks: BackgroundTasks,
+                db: Session = Depends(database.get_db)):
     store = db.query(database.Store).filter(database.Store.id == payload.store_id).first()
     if not store:
         raise HTTPException(status_code=404, detail="Store not found")
@@ -30,6 +45,15 @@ def place_order(payload: OrderRequest, db: Session = Depends(database.get_db)):
     db.commit()
     db.refresh(order)
 
-    # TODO: trigger call (Phase 5)
+    background_tasks.add_task(
+        process_order,
+        order_id=order.id,
+        customer_name=order.customer_name,
+        store_id=store.id,
+        store_name=store.business_name,
+        order_amount=float(order.order_amount),
+        language=store.language,
+        phone=order.phone,
+    )
 
     return {"order_id": order.id, "status": order.status}

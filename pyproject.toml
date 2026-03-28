@@ -49,4 +49,5 @@ dependencies = [
     "websockets==16.0",
     "yarl==1.23.0",
     "python-multipart>=0.0.22",
+    "num2words>=0.5.14",
 ]
