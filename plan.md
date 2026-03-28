@@ -159,28 +159,22 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ---
 
-### Phase 6 — Calling Service (Twilio Integration)
-- [ ] Write `api/services/call_service.py`
-- [ ] `trigger_call(order_id, phone)`:
-  - Serve stitched MP3 via public URL (`BASE_URL/audio/calls/{order_id}.mp3`)
-  - Initiate Twilio outbound call with TwiML:
-    ```xml
-    <Response>
-      <Play>https://api.yourdomain.com/audio/calls/{order_id}.mp3</Play>
-      <Gather numDigits="1" action="/webhook/keypress/{order_id}" />
-    </Response>
-    ```
-- [ ] Wire `trigger_call()` into `api/routers/orders.py` after `build_call_audio()`
+### Phase 6 — Calling Service (Twilio Integration) ✅
+- [x] `api/services/call_service.py` — `trigger_call(order_id, phone)`
+  - Serves stitched MP3 via public URL (`API_URL/audio/calls/{order_id}.mp3`)
+  - Initiates Twilio outbound call with TwiML — `<Play>` inside `<Gather>` so keypress is collected while audio plays
+  - `<Redirect>` fallback ensures no-input triggers the webhook as `no_response`
+- [x] Wired into `api/routers/orders.py` after `build_call_audio()`
 
 ---
 
-### Phase 7 — Twilio Webhooks
-- [ ] `api/routers/webhooks.py`
-- [ ] `POST /webhook/keypress/{order_id}`:
-  - Digit `1` → status: `confirmed` → play `confirmed.mp3`
-  - Digit `2` → status: `cancelled` → play `cancelled.mp3`
-  - No input → status: `no_response` → play `no_response.mp3`
-- [ ] `POST /webhook/call-status/{order_id}` — handle call events (failed, busy, no-answer)
+### Phase 7 — Twilio Webhooks ✅
+- [x] `api/routers/webhooks.py` registered at `/webhook`
+- [x] `POST /webhook/keypress/{order_id}`:
+  - Digit `1` → status: `confirmed` → plays `confirmed.mp3` in store's language
+  - Digit `2` → status: `cancelled` → plays `cancelled.mp3` in store's language
+  - No input / other → status: `no_response` → plays `no_response.mp3`
+- [x] `POST /webhook/call-status/{order_id}` — marks order as `no_response` on busy/failed/no-answer/canceled
 
 ---
 

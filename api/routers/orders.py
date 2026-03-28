@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from pydantic import BaseModel
 from api.services.audio_stitcher import build_call_audio
+from api.services.call_service import trigger_call
 
 router = APIRouter()
 
@@ -25,5 +26,5 @@ def process_order(payload: ProcessOrderRequest):
         order_amount=payload.order_amount,
         language=payload.language,
     )
-    # TODO: trigger Twilio call (Phase 5)
-    return {"status": "processing"}
+    call_sid = trigger_call(order_id=payload.order_id, phone=payload.phone)
+    return {"status": "calling", "call_sid": call_sid}
