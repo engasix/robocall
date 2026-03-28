@@ -143,26 +143,19 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ---
 
-### Phase 5 — Server Deployment
-- [ ] Provision a VPS (DigitalOcean / Vultr / AWS)
-- [ ] Install dependencies: Python, uv, MySQL, ffmpeg, Nginx
-- [ ] Configure Nginx as reverse proxy:
-  - `yourdomain.com` → Demo app (port 8000)
-  - `api.yourdomain.com` → API (port 8001)
-- [ ] Setup systemd services to keep API and Demo running
-- [ ] Configure firewall (ports 80, 443, 22)
-- [ ] Point domain DNS to server IP
-- [ ] Setup SSL via Let's Encrypt (HTTPS required for Twilio)
-- [ ] Set production `.env` with live credentials and `BASE_URL`, `API_URL`
-- [ ] Run `generate_static_audio.py` on server to populate audio files
-- [ ] Write `deploy.sh` — one-command deployer script:
-  - SSH into server
-  - Pull latest code from GitHub
-  - Install/sync dependencies (`uv sync`)
-  - Run DB migrations (`database.init_db()`)
-  - Rebuild Tailwind CSS (`npm run css:build`)
-  - Restart systemd services (API + Demo)
-  - Verify services are running
+### Phase 5 — Server Deployment ✅
+- [x] Provision AWS EC2 instance (Amazon Linux)
+- [x] Install dependencies: Python 3.11, uv, MariaDB, ffmpeg (static build), Nginx, Node.js via NVM
+- [x] Configure Nginx as reverse proxy:
+  - `robo.aikpie.com` → Demo app (port 8000) via `demo.conf`
+  - `api-robo.aikpie.com` → API (port 8001) via `api.conf`
+- [x] Setup systemd services (`robocall-api`, `robocall-demo`) to keep services running
+- [x] Configure firewall via AWS Security Groups (ports 22, 80, 443)
+- [x] Point domain DNS to server IP
+- [x] Setup SSL via Let's Encrypt (`robo.aikpie.com`, `api-robo.aikpie.com`)
+- [x] Set production `.env` with live credentials and `BASE_URL`, `API_URL`
+- [x] Run `manage_db.py migrate` + `seed` + `generate_static_audio.py` on server
+- [x] `deploy.sh` — one-command deployer: SSHes into server, pulls latest code, restarts services
 
 ---
 
