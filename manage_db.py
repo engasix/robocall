@@ -3,6 +3,7 @@ Database management script — migrations and resets.
 
 Commands:
     uv run manage_db.py migrate          # Create / update all tables
+    uv run manage_db.py seed             # Insert demo stores (skips if already exist)
     uv run manage_db.py truncate         # Truncate orders, customer_names, order_amounts
     uv run manage_db.py truncate --all   # Truncate all tables including stores
     uv run manage_db.py drop             # Drop customer_names and order_amounts (schema change)
@@ -13,7 +14,7 @@ import sys
 import shutil
 import config
 from sqlalchemy import text
-from database import engine, init_db
+from database import engine, init_db, SessionLocal, Store
 
 AUDIO_CACHE_DIRS = [
     "amounts/urdu", "amounts/english",
@@ -58,6 +59,42 @@ def truncate(all_tables: bool = False) -> None:
     print("\nDone.")
 
 
+DEMO_STORES = [
+    {
+        "business_name": "Urdu Scents",
+        "email":         "ur@robocalls.ai",
+        "phone":         "+923001092233",
+        "language":      "urdu",
+        "password_hash": "$2b$12$DEulLNjDL88aJ6KfYfvaReURT9oa/tK/1wtfEjaGVNorzxbPFp2MK",
+    },
+    {
+        "business_name": "English Scents",
+        "email":         "en@robocalls.ai",
+        "phone":         "+923001092233",
+        "language":      "english",
+        "password_hash": "$2b$12$ESRS6KDtlyPXgRqBhk6Vy.USrc4EhH5dxzAcgA8Y.GIwjMmQyUnvO",
+    },
+]
+
+
+def seed() -> None:
+    """Insert demo stores — skips any store whose email already exists."""
+    print("Seeding demo stores...\n")
+    db = SessionLocal()
+    try:
+        for store_data in DEMO_STORES:
+            exists = db.query(Store).filter(Store.email == store_data["email"]).first()
+            if exists:
+                print(f"  [skip]  {store_data['business_name']} (already exists)")
+            else:
+                db.add(Store(**store_data))
+                db.commit()
+                print(f"  [added] {store_data['business_name']}")
+    finally:
+        db.close()
+    print("\nDone.")
+
+
 def drop() -> None:
     """Drop and recreate customer_names and order_amounts (use after schema changes)."""
     print("Dropping customer_names and order_amounts...\n")
@@ -72,9 +109,10 @@ def drop() -> None:
 
 
 COMMANDS = {
-    "migrate": lambda args: migrate(),
+    "migrate":  lambda args: migrate(),
+    "seed":     lambda args: seed(),
     "truncate": lambda args: truncate(all_tables="--all" in args),
-    "drop": lambda args: drop(),
+    "drop":     lambda args: drop(),
 }
 
 if __name__ == "__main__":

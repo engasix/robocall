@@ -49,3 +49,6 @@ Thumbs.db
 
 # Ctertificates
 *.pem
+
+# Server setup
+server_setup.md
