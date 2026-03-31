@@ -186,11 +186,11 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ---
 
-### Phase 9 — Dashboard & Polish (partial)
+### Phase 9 — Dashboard & Polish ✅
 - [x] Live order status dashboard with 5s polling
 - [x] Status badges: pending=amber, confirmed=green, cancelled=red, no_response=gray
-- [ ] Clean up call audio files after call ends
-- [ ] End-to-end testing
+- [x] End-to-end testing — full call flow verified on production server
+- [ ] Clean up call audio files after call ends (future cleanup task)
 
 ---
 
