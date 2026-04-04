@@ -1,10 +1,4 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
----
-
-## Project — Robocall Order Confirmation System
+# Robocall Order Confirmation System
 
 A SaaS product targeting Pakistani e-commerce businesses that receive Cash on Delivery (COD) orders. The core problem: a large percentage of COD orders are rejected at delivery, causing losses for store owners. This system automatically calls customers after order placement with a personalized AI voice message and captures their confirmation or cancellation via keypress — reducing failed deliveries.
 
@@ -74,15 +68,13 @@ npm run css:watch   # Watch mode during development
 
 ---
 
+## Implementation
+
+All development phases, completed work, and upcoming features are tracked in [`plan.md`](plan.md).
+
+---
+
 ## Architecture
-
-### Request Flow
-
-1. Customer places order on `demo/` → saved to DB instantly → background task fires
-2. Background task POSTs to `api/orders/process`
-3. API stitches call audio, then triggers Twilio outbound call
-4. Twilio plays audio → customer presses 1/2 → webhook hits `api/webhook/keypress/{order_id}`
-5. Order status updated in DB → demo dashboard polls and reflects live
 
 ### Audio Pipeline
 
@@ -98,21 +90,6 @@ audio/
 ```
 
 Caching is DB-driven: `customer_names` and `order_amounts` tables track what has been generated. `tts.py` checks these tables before calling ElevenLabs — never re-generates if a record exists.
-
-### Key Files
-
-- `config.py` — shared env vars, voice IDs, and `VOICE_SETTINGS_URDU/ENGLISH` (speed, stability, etc.)
-- `database.py` — shared SQLAlchemy models for both services
-- `api/services/tts.py` — ElevenLabs TTS; custom Urdu number-to-words converter (`_urdu_number()`) since `num2words` does not support Urdu
-- `api/services/audio_stitcher.py` — stitches: greeting → store sentence → amount → key_prompt
-- `api/services/call_service.py` — Twilio outbound call; `<Play>` inside `<Gather>` for keypress capture
-- `api/routers/webhooks.py` — Twilio keypress and call-status callbacks; plays response audio in store's language
-- `api/services/name_utils.py` — extracts first name from Pakistani names, handles honorifics
-- `demo/routers/auth.py` — bcrypt login/logout with session management
-
-### CSS
-
-Tailwind CSS v4 with a custom warm charcoal theme (`#33302B`). Source: `demo/static/css/input.css` → compiled to `demo/static/css/style.css`. All styling uses component classes — zero inline styles in HTML templates.
 
 ### Database Tables
 
