@@ -324,9 +324,33 @@ uv run generate_static_audio.py
 ### Phase 16 — Admin Panel
 - [ ] Super admin login (separate from store login)
 - [ ] Manage all stores — view, activate, deactivate
+- [ ] **Store registration requests** — view pending requests, approve or reject
+  - Approve → store created in `stores` table, welcome email sent to store owner
+  - Reject → request marked as rejected, rejection email sent
 - [ ] Global call volume and stats across all stores
 - [ ] Billing overview — usage per store, revenue tracking
 - [ ] System health — API status, Twilio balance, ElevenLabs credits
+
+---
+
+### Phase 17 — Public Website
+- [ ] Marketing landing page — product pitch, how it works, demo video
+- [ ] Pricing page — per-call pricing and plans
+- [ ] **Store onboarding / signup flow:**
+  - Registration form — store name (can be duplicate), email (must be unique), phone, language preference
+  - On submit → request saved to `store_requests` table with status `pending`
+  - Store is NOT created yet — must wait for admin approval
+  - Confirmation email sent to applicant: "Your request has been received, we will review and get back to you"
+  - Admin reviews in Admin Panel (Phase 16) and approves or rejects
+  - On approval → store created in `stores` table, welcome email with login credentials sent
+  - On rejection → rejection email sent with reason
+- [ ] Developer docs page — Public API reference, integration guide
+- [ ] Contact / support page
+
+**New DB table: `store_requests`**
+```
+id, store_name, email, phone, language, status (pending/approved/rejected), rejection_reason, created_at, reviewed_at
+```
 
 ---
 
