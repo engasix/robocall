@@ -258,7 +258,7 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 10 — API Security Layer (Build First)
+### Phase 10 — API Security Layer
 - [ ] Generate API keys per store — stored in `stores` table (hashed)
 - [ ] `X-API-Key` header authentication middleware for all `/orders/*` and `/webhook/*` routes
 - [ ] Rate limiting per API key — max requests per minute to prevent abuse
@@ -271,7 +271,7 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 11 — Scheduler Service
+### Phase 11 — Scheduler
 - [ ] `scheduler/main.py` — standalone service (runs as separate process)
 - [ ] Retry logic — if call status is `no_response`, retry after configurable delay (e.g. 10 mins)
 - [ ] Max retry attempts per order (e.g. 3 attempts)
@@ -281,26 +281,7 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 12 — Store Dashboard
-- [ ] Each store logs in and sees only their own orders
-- [ ] Order stats: total orders, confirmed %, cancelled %, no response %
-- [ ] Call history with timestamps and duration
-- [ ] Store settings page — update language, voice settings, business name
-- [ ] API key management UI — generate/revoke keys from dashboard
-- [ ] Usage tracking — calls made this month, credits remaining
-
----
-
-### Phase 13 — Admin Panel
-- [ ] Super admin login (separate from store login)
-- [ ] Manage all stores — view, activate, deactivate
-- [ ] Global call volume and stats across all stores
-- [ ] Billing overview — usage per store, revenue tracking
-- [ ] System health — API status, Twilio balance, ElevenLabs credits
-
----
-
-### Phase 14 — Public API
+### Phase 12 — Public API
 - [ ] Public-facing REST API for direct integration
 - [ ] Authentication via API key (`X-API-Key` header — built in Phase 10)
 - [ ] Endpoints:
@@ -313,7 +294,7 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 15 — Shopify App
+### Phase 13 — Shopify App
 - [ ] Shopify app setup — public app listed on Shopify App Store
 - [ ] OAuth flow — store owner installs app and grants permissions
 - [ ] Shopify webhook — listen to `orders/create` event
@@ -323,12 +304,29 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 16 — WooCommerce Extension
+### Phase 14 — WooCommerce Extension
 - [ ] WordPress plugin — install on any WooCommerce store
 - [ ] Hook into `woocommerce_checkout_order_processed` action
 - [ ] On new COD order → call `POST /v1/orders` on our Public API
 - [ ] Plugin settings page — API key, language, calling hours
 - [ ] Order note update — write confirmation status back to WooCommerce order notes
+
+### Phase 15 — Store Dashboard
+- [ ] Each store logs in and sees only their own orders
+- [ ] Order stats: total orders, confirmed %, cancelled %, no response %
+- [ ] Call history with timestamps and duration
+- [ ] Store settings page — update language, voice settings, business name
+- [ ] API key management UI — generate/revoke keys from dashboard
+- [ ] Usage tracking — calls made this month, credits remaining
+
+---
+
+### Phase 16 — Admin Panel
+- [ ] Super admin login (separate from store login)
+- [ ] Manage all stores — view, activate, deactivate
+- [ ] Global call volume and stats across all stores
+- [ ] Billing overview — usage per store, revenue tracking
+- [ ] System health — API status, Twilio balance, ElevenLabs credits
 
 ---
 
