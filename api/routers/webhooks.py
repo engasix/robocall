@@ -10,10 +10,16 @@ router = APIRouter()
 _twilio_validator = RequestValidator(config.TWILIO_AUTH_TOKEN)
 
 
-def _validate_twilio_request(request: Request, form_data: dict) -> None:
-    """Raise 403 if the request did not come from Twilio."""
+async def _validate_twilio_request(request: Request) -> None:
+    """Raise 403 if the request did not come from Twilio.
+
+    Uses config.API_URL as the base — Nginx rewrites the host so request.url
+    reflects the internal address, not the public URL Twilio signed against.
+    Reads all form fields so the signature covers the full POST body.
+    """
     signature = request.headers.get("X-Twilio-Signature", "")
-    url = str(request.url)
+    url = config.API_URL.rstrip("/") + str(request.url.path)
+    form_data = dict(await request.form())
     if not _twilio_validator.validate(url, form_data, signature):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -45,23 +51,23 @@ def _update_order_status(order_id: int, status: str) -> None:
 
 
 @router.post("/keypress/{order_id}", response_class=PlainTextResponse)
-def handle_keypress(request: Request, order_id: int, Digits: Optional[str] = Form(default=None)):
+async def handle_keypress(request: Request, order_id: int, Digits: Optional[str] = Form(default=None)):
     """Handle customer keypress after the call audio plays.
 
     1 → confirmed
     2 → cancelled
     anything else / no input → no_response
     """
-    _validate_twilio_request(request, {"Digits": Digits or ""})
+    await _validate_twilio_request(request)
 
     if Digits == "1":
-        status = "confirmed"
+        order_status = "confirmed"
         audio_key = "confirmed"
     elif Digits == "2":
-        status = "cancelled"
+        order_status = "cancelled"
         audio_key = "cancelled"
     else:
-        status = "no_response"
+        order_status = "no_response"
         audio_key = "no_response"
 
     db = SessionLocal()
@@ -69,7 +75,7 @@ def handle_keypress(request: Request, order_id: int, Digits: Optional[str] = For
         language = _get_order_language(order_id, db)
         order = db.query(Order).filter(Order.id == order_id).first()
         if order:
-            order.status = status
+            order.status = order_status
             db.commit()
     finally:
         db.close()
@@ -79,7 +85,7 @@ def handle_keypress(request: Request, order_id: int, Digits: Optional[str] = For
 
 
 @router.post("/call-status/{order_id}")
-def handle_call_status(
+async def handle_call_status(
     request: Request,
     order_id: int,
     CallStatus: Optional[str] = Form(default=None),
@@ -88,7 +94,7 @@ def handle_call_status(
 
     If the call never connected (busy, failed, no-answer), mark order as no_response.
     """
-    _validate_twilio_request(request, {"CallStatus": CallStatus or ""})
+    await _validate_twilio_request(request)
 
     if CallStatus in ("busy", "failed", "no-answer", "canceled"):
         _update_order_status(order_id, "no_response")
