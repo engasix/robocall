@@ -1,8 +1,10 @@
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel
+from datetime import datetime, timezone
+from sqlalchemy.orm import Session
 from api.services.audio_stitcher import build_call_audio
-from api.services.call_service import trigger_call
 from api.dependencies import require_internal_key
+import database
 
 router = APIRouter()
 
@@ -18,7 +20,7 @@ class ProcessOrderRequest(BaseModel):
 
 
 @router.post("/process", dependencies=[Depends(require_internal_key)])
-def process_order(payload: ProcessOrderRequest):
+def process_order(payload: ProcessOrderRequest, db: Session = Depends(database.get_db)):
     build_call_audio(
         order_id=payload.order_id,
         customer_name=payload.customer_name,
@@ -27,5 +29,11 @@ def process_order(payload: ProcessOrderRequest):
         order_amount=payload.order_amount,
         language=payload.language,
     )
-    call_sid = trigger_call(order_id=payload.order_id, phone=payload.phone)
-    return {"status": "calling", "call_sid": call_sid}
+
+    # Hand off to scheduler — set next_retry_at to now so it gets picked up immediately
+    order = db.query(database.Order).filter(database.Order.id == payload.order_id).first()
+    if order:
+        order.next_retry_at = datetime.now(timezone.utc)
+        db.commit()
+
+    return {"status": "scheduled"}

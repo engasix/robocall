@@ -28,7 +28,6 @@ def _process_retries() -> None:
             db.query(Order)
             .filter(
                 Order.status == "pending",
-                Order.retry_count > 0,
                 Order.next_retry_at.isnot(None),
                 Order.next_retry_at <= now,
             )
@@ -48,7 +47,7 @@ def _process_retries() -> None:
                 db.commit()
 
                 trigger_call(order_id=order.id, phone=order.phone)
-                log.info(f"Retry triggered for order {order.id} (attempt {order.retry_count + 1})")
+                log.info(f"Call triggered for order {order.id} (attempt {order.retry_count + 1})")
             except Exception as e:
                 log.error(f"Failed to trigger retry for order {order.id}: {e}")
 
