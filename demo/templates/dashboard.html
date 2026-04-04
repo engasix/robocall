@@ -159,12 +159,12 @@
     };
 
     function attemptsDisplay(retryCount, status) {
-      const total = retryCount + 1;
+      const total = Math.min(retryCount + 1, 3);
       const max = 3;
       const dots = Array.from({ length: max }, (_, i) =>
-        `<span class="w-2 h-2 rounded-full inline-block ${i < total ? 'bg-stone-500' : 'bg-stone-200'}"></span>`
+        `<span style="width:8px;height:8px;border-radius:50%;display:inline-block;background:${i < total ? '#78716c' : '#e7e5e4'};"></span>`
       ).join('');
-      return `<div class="flex items-center gap-1">${dots}<span class="text-xs text-stone-400 ml-1">${total}/${max}</span></div>`;
+      return `<div style="display:flex;align-items:center;gap:3px;">${dots}<span style="font-size:11px;color:#a8a29e;margin-left:4px;">${total}/${max}</span></div>`;
     }
 
     function statusBadge(status) {
@@ -224,7 +224,7 @@
     }
 
     fetchOrders();
-    setInterval(fetchOrders, 5000);
+    setInterval(fetchOrders, 60000);
   </script>
 
 </body>
