@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO, format="[scheduler] %(message)s")
 log = logging.getLogger(__name__)
 
 POLL_INTERVAL = 60  # seconds
+BATCH_SIZE = 20     # max calls per poll cycle — adjust based on telephony provider limits
 
 
 def _process_retries() -> None:
@@ -31,6 +32,7 @@ def _process_retries() -> None:
                 Order.next_retry_at.isnot(None),
                 Order.next_retry_at <= now,
             )
+            .limit(BATCH_SIZE)
             .all()
         )
 
