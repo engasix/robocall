@@ -258,16 +258,16 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 10 — API Security Layer
-- [ ] Generate API keys per store — stored in `stores` table (hashed)
-- [ ] `X-API-Key` header authentication middleware for all `/orders/*` and `/webhook/*` routes
-- [ ] Rate limiting per API key — max requests per minute to prevent abuse
+### Phase 10 — API Security Layer ✅
+- [x] Generate API keys per store — stored in `stores` table (`api_key_hash`, SHA-256)
+- [x] `X-Api-Key` header authentication on `/orders/process` via `INTERNAL_API_KEY` (demo→API)
+- [x] Rate limiting per API key — 60 req/min sliding window (in-memory, `api/dependencies.py`)
 - [ ] IP whitelisting option per store (optional, for enterprise stores)
-- [ ] API key management endpoints:
+- [x] API key management endpoints:
   - `POST /auth/generate-key` — generate a new API key for a store
   - `POST /auth/revoke-key` — revoke an existing key
-- [ ] Secure Twilio webhooks — validate `X-Twilio-Signature` on all incoming webhook requests
-- [ ] Add API key to demo→API communication in `demo/routers/orders.py`
+- [x] Secure Twilio webhooks — validate `X-Twilio-Signature` on all incoming webhook requests
+- [x] Add API key to demo→API communication in `demo/routers/orders.py`
 
 ---
 
