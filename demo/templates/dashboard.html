@@ -121,13 +121,14 @@
               <th class="table-header">Phone</th>
               <th class="table-header">Store</th>
               <th class="table-header">Amount</th>
+              <th class="table-header">Attempts</th>
               <th class="table-header">Status</th>
               <th class="table-header">Time</th>
             </tr>
           </thead>
           <tbody id="orders-tbody">
             <tr>
-              <td colspan="7" class="px-6 py-16 text-center">
+              <td colspan="8" class="px-6 py-16 text-center">
                 <div class="flex flex-col items-center gap-2 text-stone-400">
                   <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -157,6 +158,15 @@
       cancelled: 'Cancelled', no_response: 'No Response',
     };
 
+    function attemptsDisplay(retryCount, status) {
+      const total = retryCount + 1;
+      const max = 3;
+      const dots = Array.from({ length: max }, (_, i) =>
+        `<span class="w-2 h-2 rounded-full inline-block ${i < total ? 'bg-stone-500' : 'bg-stone-200'}"></span>`
+      ).join('');
+      return `<div class="flex items-center gap-1">${dots}<span class="text-xs text-stone-400 ml-1">${total}/${max}</span></div>`;
+    }
+
     function statusBadge(status) {
       const cls = STATUS_BADGE[status] || 'badge-no-response';
       const dot = STATUS_DOT[status] || 'dot-no-response';
@@ -170,7 +180,7 @@
     }
 
     function emptyState(msg) {
-      return `<tr><td colspan="7" class="px-6 py-16 text-center">
+      return `<tr><td colspan="8" class="px-6 py-16 text-center">
         <div class="flex flex-col items-center gap-2 text-stone-400">
           <svg class="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
@@ -196,6 +206,7 @@
               <td class="table-cell text-stone-500 tabular-nums">${o.phone}</td>
               <td class="table-cell"><span class="badge-store">${o.store_name}</span></td>
               <td class="table-cell font-semibold text-stone-800 tabular-nums">PKR ${Number(o.order_amount).toLocaleString()}</td>
+              <td class="table-cell">${attemptsDisplay(o.retry_count, o.status)}</td>
               <td class="table-cell">${statusBadge(o.status)}</td>
               <td class="table-cell text-stone-400 text-xs tabular-nums">${formatTime(o.created_at)}</td>
             </tr>`).join('');
