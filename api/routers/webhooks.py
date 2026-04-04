@@ -12,7 +12,8 @@ router = APIRouter()
 _twilio_validator = RequestValidator(config.TWILIO_AUTH_TOKEN)
 
 # Delay in minutes for each retry attempt, indexed by current retry_count
-RETRY_DELAYS = [30, 60, 90]
+# RETRY_DELAYS = [30, 60, 90]
+RETRY_DELAYS = [5, 5, 5]
 MAX_RETRIES = 3
 
 
