@@ -1,6 +1,6 @@
-from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Numeric
+from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Numeric, Time
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
-from datetime import datetime, timezone
+from datetime import datetime, timezone, time
 import config
 
 engine = create_engine(config.DATABASE_URL)
@@ -25,7 +25,10 @@ class Store(Base):
     phone = Column(String(20), nullable=False)
     language = Column(Enum("urdu", "english"), nullable=False, default="english")
     password_hash = Column(String(255), nullable=True)
-    api_key_hash = Column(String(64), nullable=True)   # SHA-256 hex of the raw API key
+    api_key_hash = Column(String(64), nullable=True)
+    timezone = Column(String(50), nullable=False, default="Asia/Karachi")
+    call_window_start = Column(Time, nullable=False, default=time(9, 0))
+    call_window_end = Column(Time, nullable=False, default=time(21, 0))
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 
@@ -41,6 +44,8 @@ class Order(Base):
     phone = Column(String(20), nullable=False)
     order_amount = Column(Numeric(10, 2), nullable=False)
     status = Column(Enum("pending", "confirmed", "cancelled", "no_response"), nullable=False, default="pending")
+    retry_count = Column(Integer, nullable=False, default=0)
+    next_retry_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

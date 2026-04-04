@@ -271,13 +271,15 @@ uv run generate_static_audio.py
 
 ---
 
-### Phase 11 — Scheduler
-- [ ] `scheduler/main.py` — standalone service (runs as separate process)
-- [ ] Retry logic — if call status is `no_response`, retry after configurable delay (e.g. 10 mins)
-- [ ] Max retry attempts per order (e.g. 3 attempts)
-- [ ] Call scheduling window — only call between configured hours (e.g. 9AM–9PM)
-- [ ] Track retry attempts in `orders` table (`retry_count` column)
-- [ ] Wire into `main.py` as a subprocess alongside API and Demo
+### Phase 11 — Scheduler ✅
+- [x] `scheduler/main.py` — standalone service (runs as separate process)
+- [x] Retry logic — 4 total attempts (1 immediate + 3 retries at 30 / 60 / 90 min intervals)
+- [x] Order stays `pending` during retries — only moves to `no_response` after all attempts exhausted
+- [x] `next_retry_at` calculated in webhook, clamped to store's calling window — scheduler is a dumb loop
+- [x] Per-store calling window (`call_window_start`, `call_window_end` TIME columns on `stores`)
+- [x] Per-store timezone (`timezone` VARCHAR column on `stores`, default `Asia/Karachi`)
+- [x] Track retry attempts in `orders` table (`retry_count`, `next_retry_at` columns)
+- [x] Wire into `main.py` as a subprocess alongside API and Demo
 
 ---
 

@@ -20,9 +20,12 @@ SERVICES = [
         "name": "Demo",
         "cmd": ["uvicorn", "demo.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"],
     },
+    {
+        "name": "Scheduler",
+        "cmd": ["python", "-m", "scheduler.main"],
+    },
     # Future components:
     # {"name": "Dashboard", "cmd": ["uvicorn", "dashboard.main:app", "--port", "8002", "--reload"]},
-    # {"name": "Scheduler", "cmd": ["python", "-m", "scheduler.main"]},
 ]
 
 

@@ -57,7 +57,12 @@ def migrate() -> None:
     print("Running migrations...\n")
     init_db()
     print("  [done] All tables created / verified.")
-    _add_column_if_missing("stores", "api_key_hash", "VARCHAR(64) NULL")
+    _add_column_if_missing("stores", "api_key_hash",       "VARCHAR(64) NULL")
+    _add_column_if_missing("stores", "timezone",           "VARCHAR(50) NOT NULL DEFAULT 'Asia/Karachi'")
+    _add_column_if_missing("stores", "call_window_start",  "TIME NOT NULL DEFAULT '09:00:00'")
+    _add_column_if_missing("stores", "call_window_end",    "TIME NOT NULL DEFAULT '21:00:00'")
+    _add_column_if_missing("orders", "retry_count",        "INT NOT NULL DEFAULT 0")
+    _add_column_if_missing("orders", "next_retry_at",      "DATETIME NULL")
 
 
 def truncate(all_tables: bool = False) -> None:
