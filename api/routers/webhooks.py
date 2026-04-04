@@ -12,10 +12,8 @@ router = APIRouter()
 _twilio_validator = RequestValidator(config.TWILIO_AUTH_TOKEN)
 
 # Delay in minutes for each retry attempt, indexed by current retry_count
-# RETRY_DELAYS = [30, 60, 90]
-RETRY_DELAYS = [1, 1, 1]
-MAX_RETRIES = 3
-
+RETRY_DELAYS = [30, 60]
+MAX_RETRIES = 2
 
 async def _validate_twilio_request(request: Request) -> None:
     """Raise 403 if the request did not come from Twilio.
