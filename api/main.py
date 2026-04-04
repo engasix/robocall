@@ -2,7 +2,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 import database
-from api.routers import orders, webhooks
+from api.routers import orders, webhooks, auth
 
 
 @asynccontextmanager
@@ -17,3 +17,4 @@ app.mount("/audio", StaticFiles(directory="audio"), name="audio")
 
 app.include_router(orders.router, prefix="/orders")
 app.include_router(webhooks.router, prefix="/webhook")
+app.include_router(auth.router, prefix="/auth")

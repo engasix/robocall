@@ -30,6 +30,7 @@ def call_api_process_order(order_id: int, customer_name: str, store_id: int,
                 "language": language,
                 "phone": phone,
             },
+            headers={"X-Api-Key": config.INTERNAL_API_KEY},
             timeout=300.0,
         )
     except Exception as e:

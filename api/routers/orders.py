@@ -1,7 +1,8 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 from api.services.audio_stitcher import build_call_audio
 from api.services.call_service import trigger_call
+from api.dependencies import require_internal_key
 
 router = APIRouter()
 
@@ -16,7 +17,7 @@ class ProcessOrderRequest(BaseModel):
     phone: str
 
 
-@router.post("/process")
+@router.post("/process", dependencies=[Depends(require_internal_key)])
 def process_order(payload: ProcessOrderRequest):
     build_call_audio(
         order_id=payload.order_id,

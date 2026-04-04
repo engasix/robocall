@@ -18,6 +18,10 @@ API_URL  = os.getenv("API_URL",  "http://localhost:8001")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 
+# Key used by the demo service to authenticate with the API.
+# Must be set in .env — generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+INTERNAL_API_KEY = os.getenv("INTERNAL_API_KEY", "")
+
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio")
 
 # ── ElevenLabs Voice Settings ─────────────────────────────────────────────────

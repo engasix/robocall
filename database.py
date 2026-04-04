@@ -25,6 +25,7 @@ class Store(Base):
     phone = Column(String(20), nullable=False)
     language = Column(Enum("urdu", "english"), nullable=False, default="english")
     password_hash = Column(String(255), nullable=True)
+    api_key_hash = Column(String(64), nullable=True)   # SHA-256 hex of the raw API key
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

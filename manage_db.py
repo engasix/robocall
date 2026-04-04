@@ -16,6 +16,25 @@ import config
 from sqlalchemy import text
 from database import engine, init_db, SessionLocal, Store
 
+def _add_column_if_missing(table: str, column: str, definition: str) -> None:
+    """Add a column to a table only if it doesn't already exist."""
+    with engine.connect() as conn:
+        result = conn.execute(text(
+            "SELECT COUNT(*) FROM information_schema.columns "
+            "WHERE table_schema = DATABASE() "
+            "AND table_name = :table AND column_name = :column"
+        ), {"table": table, "column": column})
+        exists = result.scalar() > 0
+
+    if exists:
+        print(f"  [skip]  {table}.{column} already exists")
+    else:
+        with engine.connect() as conn:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN {column} {definition}"))
+            conn.commit()
+        print(f"  [added] {table}.{column}")
+
+
 AUDIO_CACHE_DIRS = [
     "amounts/urdu", "amounts/english",
     "names/urdu", "names/english",
@@ -34,10 +53,11 @@ def clear_audio_cache() -> None:
 
 
 def migrate() -> None:
-    """Create all tables if they don't exist (safe to run multiple times)."""
+    """Create all tables if they don't exist, then apply column migrations."""
     print("Running migrations...\n")
     init_db()
     print("  [done] All tables created / verified.")
+    _add_column_if_missing("stores", "api_key_hash", "VARCHAR(64) NULL")
 
 
 def truncate(all_tables: bool = False) -> None:
