@@ -77,6 +77,34 @@ Tailwind CSS v4 with a custom warm charcoal theme (`#33302B`). Source: `demo/sta
 - `order_amounts` — tracks generated amount audio per amount + language
 - `store_requests` (planned Phase 17) — store onboarding requests pending admin approval
 
+## Project Vision
+
+A SaaS product targeting Pakistani e-commerce businesses that receive Cash on Delivery (COD) orders. The core problem: a large percentage of COD orders are rejected at delivery, causing losses for store owners. This system automatically calls customers after order placement to confirm or cancel — reducing failed deliveries.
+
+**Business model:** Charge stores per call (~PKR 6/call). Cost per call is ~PKR 2.65 leaving ~55% margin at scale.
+
+**Target integrations:** Shopify App Store, WooCommerce plugin, and a Public API for custom integrations.
+
+---
+
+## Planned Components (see plan.md for full detail)
+
+| Phase | Component | Status |
+|---|---|---|
+| 1–9 | Core system — TTS, audio stitching, Twilio calling, webhooks, dashboard | ✅ Complete |
+| 10 | API Security Layer — API key auth, rate limiting, Twilio signature validation | Pending |
+| 11 | Scheduler — retry failed calls, call scheduling window | Pending |
+| 12 | Public API — `/v1/orders` REST API with API key auth and status webhooks | Pending |
+| 13 | Shopify App — auto-trigger calls on COD order creation | Pending |
+| 14 | WooCommerce Extension — WordPress plugin for WooCommerce stores | Pending |
+| 15 | Store Dashboard — per-store order view, stats, settings, API key management | Pending |
+| 16 | Admin Panel — manage stores, approve/reject onboarding requests, system health | Pending |
+| 17 | Public Website — marketing site with store onboarding/signup flow | Pending |
+
+**Store onboarding flow (Phase 17):** Store submits registration form → saved to `store_requests` table as `pending` → admin reviews in Admin Panel → on approval, store is created and credentials emailed → on rejection, rejection email sent. Store is never created until admin approves.
+
+---
+
 ## Important Conventions
 
 - **Never push to GitHub without being asked** — always wait for explicit instruction
