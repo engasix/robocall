@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.exceptions import HTTPException
 import database
-from api.routers import orders, webhooks, auth
+from api.routers import webhooks, auth
 from api.routers.v1 import orders as v1_orders
 
 
@@ -42,7 +42,6 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 
 app.mount("/audio", StaticFiles(directory="audio"), name="audio")
 
-app.include_router(orders.router, prefix="/orders")
 app.include_router(webhooks.router, prefix="/webhook")
-app.include_router(auth.router, prefix="/auth")
+app.include_router(auth.router, prefix="/v1/auth", tags=["v1"])
 app.include_router(v1_orders.router, prefix="/v1/orders", tags=["v1"])

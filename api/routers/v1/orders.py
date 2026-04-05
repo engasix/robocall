@@ -11,11 +11,10 @@ Response format:
 from fastapi import APIRouter, BackgroundTasks, Depends, Query, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 import database
 from api.dependencies import require_store_api_key
-from api.services.audio_stitcher import build_call_audio
+from api.services.order_processor import build_and_schedule
 
 router = APIRouter()
 
@@ -37,26 +36,6 @@ class PlaceOrderRequest(BaseModel):
     order_amount: float
     order_number: str | None = None
 
-
-def _build_and_schedule(order_id: int, customer_name: str, store_id: int,
-                        store_name: str, order_amount: float, language: str) -> None:
-    """Build call audio then hand off to scheduler by setting next_retry_at = now."""
-    build_call_audio(
-        order_id=order_id,
-        customer_name=customer_name,
-        store_id=store_id,
-        store_name=store_name,
-        order_amount=order_amount,
-        language=language,
-    )
-    db = database.SessionLocal()
-    try:
-        order = db.query(database.Order).filter(database.Order.id == order_id).first()
-        if order:
-            order.next_retry_at = datetime.now(timezone.utc)
-            db.commit()
-    finally:
-        db.close()
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -88,7 +67,7 @@ def place_order(
     db.refresh(order)
 
     background_tasks.add_task(
-        _build_and_schedule,
+        build_and_schedule,
         order_id=order.id,
         customer_name=order.customer_name,
         store_id=store.id,
