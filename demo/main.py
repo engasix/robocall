@@ -9,6 +9,7 @@ from sqlalchemy.orm import Session
 import config
 import database
 from demo.routers import orders, auth
+from api.services import api_key as api_key_service
 
 
 @asynccontextmanager
@@ -58,6 +59,31 @@ def place_order_page(request: Request, session_store=Depends(auth.require_auth))
         name="index.html",
         context={"stores": stores, "store": session_store},
     )
+
+
+@app.post("/api/generate-key")
+def generate_key(
+    request: Request,
+    session_store=Depends(auth.require_auth),
+    db: Session = Depends(database.get_db),
+):
+    if isinstance(session_store, RedirectResponse):
+        return session_store
+    store = db.query(database.Store).filter(database.Store.id == session_store.id).first()
+    raw, hashed = api_key_service.generate()
+    store.api_key_hash = hashed
+    db.commit()
+    return {"api_key": raw, "has_key": True}
+
+
+@app.get("/api/key-status")
+def key_status(
+    request: Request,
+    session_store=Depends(auth.require_auth),
+):
+    if isinstance(session_store, RedirectResponse):
+        return session_store
+    return {"has_key": session_store.api_key_hash is not None}
 
 
 @app.get("/api/orders")
