@@ -69,7 +69,7 @@ def generate_key(
 ):
     if isinstance(session_store, RedirectResponse):
         return session_store
-    store = db.query(database.Store).filter(database.Store.id == session_store.id).first()
+    store = db.query(database.Store).filter(database.Store.id == session_store["id"]).first()
     raw, hashed = api_key_service.generate()
     store.api_key_hash = hashed
     db.commit()
@@ -83,7 +83,9 @@ def key_status(
 ):
     if isinstance(session_store, RedirectResponse):
         return session_store
-    return {"has_key": session_store.api_key_hash is not None}
+    db = next(database.get_db())
+    store = db.query(database.Store).filter(database.Store.id == session_store["id"]).first()
+    return {"has_key": store.api_key_hash is not None}
 
 
 @app.get("/api/orders")
