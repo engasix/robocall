@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Form, HTTPException, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Form, HTTPException, Request, Response, status
 from fastapi.responses import PlainTextResponse
 from typing import Optional
 from twilio.request_validator import RequestValidator
@@ -6,6 +6,7 @@ from zoneinfo import ZoneInfo
 from datetime import datetime, timezone, timedelta
 import config
 from database import SessionLocal, Order
+from api.services import store_notify
 
 router = APIRouter()
 
@@ -67,16 +68,31 @@ def _compute_next_retry_at(store, retry_count: int) -> datetime:
     return next_open.astimezone(timezone.utc)
 
 
-def _schedule_retry_or_close(order, db) -> None:
+def _schedule_retry_or_close(order, db, background_tasks: BackgroundTasks) -> None:
     """After a failed call attempt, either schedule the next retry or close the order."""
     if order.retry_count >= MAX_RETRIES:
         order.status = "no_response"
         order.next_retry_at = None
+        db.commit()
+        _maybe_notify(order, background_tasks)
     else:
         order.next_retry_at = _compute_next_retry_at(order.store, order.retry_count)
         order.retry_count += 1
-        # status stays "pending"
-    db.commit()
+        db.commit()
+
+
+def _maybe_notify(order, background_tasks: BackgroundTasks) -> None:
+    """Fire store callback if a webhook_url is registered."""
+    if order.store.webhook_url:
+        background_tasks.add_task(
+            store_notify.notify,
+            webhook_url=order.store.webhook_url,
+            order_id=order.id,
+            status=order.status,
+            customer_name=order.customer_name,
+            phone=order.phone,
+            order_amount=float(order.order_amount),
+        )
 
 
 def _twiml(audio_url: str) -> str:
@@ -92,7 +108,7 @@ def _get_order_language(order_id: int, db) -> str:
 
 
 @router.post("/keypress/{order_id}", response_class=PlainTextResponse)
-async def handle_keypress(request: Request, order_id: int, Digits: Optional[str] = Form(default=None)):
+async def handle_keypress(request: Request, background_tasks: BackgroundTasks, order_id: int, Digits: Optional[str] = Form(default=None)):
     """Handle customer keypress after the call audio plays.
 
     1 → confirmed
@@ -111,16 +127,18 @@ async def handle_keypress(request: Request, order_id: int, Digits: Optional[str]
                 order.status = "confirmed"
                 order.next_retry_at = None
                 db.commit()
+                _maybe_notify(order, background_tasks)
             audio_key = "confirmed"
         elif Digits == "2":
             if order:
                 order.status = "cancelled"
                 order.next_retry_at = None
                 db.commit()
+                _maybe_notify(order, background_tasks)
             audio_key = "cancelled"
         else:
             if order:
-                _schedule_retry_or_close(order, db)
+                _schedule_retry_or_close(order, db, background_tasks)
             audio_key = "no_response"
     finally:
         db.close()
@@ -132,6 +150,7 @@ async def handle_keypress(request: Request, order_id: int, Digits: Optional[str]
 @router.post("/call-status/{order_id}")
 async def handle_call_status(
     request: Request,
+    background_tasks: BackgroundTasks,
     order_id: int,
     CallStatus: Optional[str] = Form(default=None),
 ):
@@ -147,7 +166,7 @@ async def handle_call_status(
         try:
             order = db.query(Order).filter(Order.id == order_id).first()
             if order and order.status == "pending":
-                _schedule_retry_or_close(order, db)
+                _schedule_retry_or_close(order, db, background_tasks)
         finally:
             db.close()
 

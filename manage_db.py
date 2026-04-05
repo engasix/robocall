@@ -58,6 +58,7 @@ def migrate() -> None:
     init_db()
     print("  [done] All tables created / verified.")
     _add_column_if_missing("stores", "api_key_hash",       "VARCHAR(64) NULL")
+    _add_column_if_missing("stores", "webhook_url",        "VARCHAR(500) NULL")
     _add_column_if_missing("stores", "timezone",           "VARCHAR(50) NOT NULL DEFAULT 'Asia/Karachi'")
     _add_column_if_missing("stores", "call_window_start",  "TIME NOT NULL DEFAULT '09:00:00'")
     _add_column_if_missing("stores", "call_window_end",    "TIME NOT NULL DEFAULT '21:00:00'")

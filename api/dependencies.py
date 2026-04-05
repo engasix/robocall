@@ -2,8 +2,11 @@
 
 import time
 from collections import defaultdict
-from fastapi import Header, HTTPException, status
+from fastapi import Depends, Header, HTTPException, status
+from sqlalchemy.orm import Session
 import config
+import database
+from api.services import api_key as api_key_service
 
 # ── In-memory rate limiter ────────────────────────────────────────────────────
 # Tracks (key → list of request timestamps) to enforce a sliding window.
@@ -49,3 +52,24 @@ def require_internal_key(x_api_key: str = Header(...)) -> None:
             detail="Invalid API key.",
         )
     _check_rate_limit(x_api_key)
+
+
+# ── Per-store API key auth ────────────────────────────────────────────────────
+
+def require_store_api_key(
+    x_api_key: str = Header(...),
+    db: Session = Depends(database.get_db),
+) -> database.Store:
+    """Validate X-Api-Key against per-store api_key_hash.
+
+    Returns the authenticated Store. Used to protect public /v1/ endpoints.
+    """
+    hashed = api_key_service._hash(x_api_key)
+    store = db.query(database.Store).filter(database.Store.api_key_hash == hashed).first()
+    if not store:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid API key.",
+        )
+    _check_rate_limit(x_api_key)
+    return store

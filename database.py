@@ -26,6 +26,7 @@ class Store(Base):
     language = Column(Enum("urdu", "english"), nullable=False, default="english")
     password_hash = Column(String(255), nullable=True)
     api_key_hash = Column(String(64), nullable=True)
+    webhook_url = Column(String(500), nullable=True)   # store's callback URL for status updates
     timezone = Column(String(50), nullable=False, default="Asia/Karachi")
     call_window_start = Column(Time, nullable=False, default=time(9, 0))
     call_window_end = Column(Time, nullable=False, default=time(21, 0))
