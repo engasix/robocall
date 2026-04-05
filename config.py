@@ -18,6 +18,10 @@ API_URL  = os.getenv("API_URL",  "http://localhost:8001")
 
 SECRET_KEY = os.getenv("SECRET_KEY", "change-me-in-production")
 
+# Admin key — used to protect management endpoints like /v1/auth/generate-key
+# Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+ADMIN_KEY = os.getenv("ADMIN_KEY", "")
+
 AUDIO_DIR = os.path.join(os.path.dirname(__file__), "audio")
 
 # ── ElevenLabs Voice Settings ─────────────────────────────────────────────────

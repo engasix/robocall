@@ -1,17 +1,24 @@
-"""API key management endpoints.
+"""API key management endpoints — admin only.
 
-All endpoints require the internal API key (X-Api-Key header).
-Per-store keys generated here are intended for the public /v1/ API.
+Protected by ADMIN_KEY from config (.env).
+Used to generate and revoke per-store API keys for the public /v1/ API.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
+import config
 import database
-from api.dependencies import require_internal_key
 from api.services import api_key as api_key_service
 
 router = APIRouter()
+
+
+def require_admin_key(x_api_key: str = Header(...)) -> None:
+    if not config.ADMIN_KEY:
+        raise HTTPException(status_code=500, detail="Server misconfiguration: ADMIN_KEY not set.")
+    if x_api_key != config.ADMIN_KEY:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid admin key.")
 
 
 class GenerateKeyRequest(BaseModel):
@@ -22,12 +29,8 @@ class RevokeKeyRequest(BaseModel):
     store_id: int
 
 
-@router.post("/generate-key", dependencies=[Depends(require_internal_key)])
+@router.post("/generate-key", dependencies=[Depends(require_admin_key)])
 def generate_key(payload: GenerateKeyRequest, db: Session = Depends(database.get_db)):
-    """Generate a new API key for a store.
-
-    The raw key is returned exactly once — it cannot be recovered afterward.
-    """
     store = db.query(database.Store).filter(database.Store.id == payload.store_id).first()
     if not store:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found.")
@@ -46,9 +49,8 @@ def generate_key(payload: GenerateKeyRequest, db: Session = Depends(database.get
     }
 
 
-@router.post("/revoke-key", dependencies=[Depends(require_internal_key)])
+@router.post("/revoke-key", dependencies=[Depends(require_admin_key)])
 def revoke_key(payload: RevokeKeyRequest, db: Session = Depends(database.get_db)):
-    """Revoke the API key for a store."""
     store = db.query(database.Store).filter(database.Store.id == payload.store_id).first()
     if not store:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Store not found.")
