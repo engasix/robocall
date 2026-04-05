@@ -88,6 +88,7 @@ def _maybe_notify(order, background_tasks: BackgroundTasks) -> None:
             store_notify.notify,
             webhook_url=order.store.webhook_url,
             order_id=order.id,
+            order_number=order.order_number,
             status=order.status,
             customer_name=order.customer_name,
             phone=order.phone,

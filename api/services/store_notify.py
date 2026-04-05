@@ -3,8 +3,8 @@
 import httpx
 
 
-def notify(webhook_url: str, order_id: int, status: str,
-           customer_name: str, phone: str, order_amount: float) -> None:
+def notify(webhook_url: str, order_id: int, order_number: str | None,
+           status: str, customer_name: str, phone: str, order_amount: float) -> None:
     """POST order status update to the store's callback URL.
 
     Runs as a FastAPI BackgroundTask — failures are logged but never
@@ -15,6 +15,7 @@ def notify(webhook_url: str, order_id: int, status: str,
             webhook_url,
             json={
                 "order_id": order_id,
+                "order_number": order_number,
                 "status": status,
                 "customer_name": customer_name,
                 "phone": phone,

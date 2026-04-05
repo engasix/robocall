@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Numeric, Time
+from sqlalchemy import create_engine, Column, Integer, String, Enum, ForeignKey, DateTime, Numeric, Time, UniqueConstraint
 from sqlalchemy.orm import declarative_base, sessionmaker, relationship
 from datetime import datetime, timezone, time
 import config
@@ -39,8 +39,13 @@ class Store(Base):
 class Order(Base):
     __tablename__ = "orders"
 
+    __table_args__ = (
+        UniqueConstraint("store_id", "order_number", name="uq_store_order_number"),
+    )
+
     id = Column(Integer, primary_key=True, index=True)
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=False)
+    order_number = Column(String(100), nullable=True)   # external reference (Shopify, WooCommerce, etc.)
     customer_name = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=False)
     order_amount = Column(Numeric(10, 2), nullable=False)

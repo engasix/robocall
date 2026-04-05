@@ -2,9 +2,14 @@
 
 Authentication: X-Api-Key header (per-store key generated via /auth/generate-key).
 All endpoints automatically scope to the authenticated store.
+
+Response format:
+    { "status": true, "data": ... }
+    { "status": false, "reason": "..." }
 """
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from fastapi import APIRouter, BackgroundTasks, Depends, Query, status
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
@@ -15,10 +20,22 @@ from api.services.audio_stitcher import build_call_audio
 router = APIRouter()
 
 
+def ok(data):
+    return {"status": True, "data": data}
+
+
+def err(reason: str, http_status: int = 400):
+    return JSONResponse(
+        status_code=http_status,
+        content={"status": False, "reason": reason},
+    )
+
+
 class PlaceOrderRequest(BaseModel):
     customer_name: str
     phone: str
     order_amount: float
+    order_number: str | None = None
 
 
 def _build_and_schedule(order_id: int, customer_name: str, store_id: int,
@@ -49,8 +66,18 @@ def place_order(
     store: database.Store = Depends(require_store_api_key),
     db: Session = Depends(database.get_db),
 ):
+    # Check for duplicate order_number within this store
+    if payload.order_number:
+        existing = db.query(database.Order).filter(
+            database.Order.store_id == store.id,
+            database.Order.order_number == payload.order_number,
+        ).first()
+        if existing:
+            return err(f"Order number '{payload.order_number}' already exists.", http_status=409)
+
     order = database.Order(
         store_id=store.id,
+        order_number=payload.order_number,
         customer_name=payload.customer_name,
         phone=payload.phone,
         order_amount=payload.order_amount,
@@ -70,23 +97,27 @@ def place_order(
         language=store.language,
     )
 
-    return {"order_id": order.id, "status": order.status}
+    return ok({"order_id": order.id, "order_number": order.order_number, "status": order.status})
 
 
-@router.get("/{order_id}")
+@router.get("/{identifier}")
 def get_order(
-    order_id: int,
+    identifier: str,
     store: database.Store = Depends(require_store_api_key),
     db: Session = Depends(database.get_db),
 ):
-    order = db.query(database.Order).filter(
-        database.Order.id == order_id,
-        database.Order.store_id == store.id,
-    ).first()
+    # Accept both internal order_id (integer) and external order_number (string)
+    query = db.query(database.Order).filter(database.Order.store_id == store.id)
+    if identifier.isdigit():
+        order = query.filter(database.Order.id == int(identifier)).first()
+    else:
+        order = query.filter(database.Order.order_number == identifier).first()
+
     if not order:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Order not found.")
-    return {
+        return err("Order not found.", http_status=404)
+    return ok({
         "order_id": order.id,
+        "order_number": order.order_number,
         "customer_name": order.customer_name,
         "phone": order.phone,
         "order_amount": float(order.order_amount),
@@ -94,7 +125,7 @@ def get_order(
         "retry_count": order.retry_count,
         "created_at": order.created_at.isoformat() if order.created_at else None,
         "updated_at": order.updated_at.isoformat() if order.updated_at else None,
-    }
+    })
 
 
 @router.get("")
@@ -114,13 +145,14 @@ def list_orders(
         .limit(page_size)
         .all()
     )
-    return {
+    return ok({
         "page": page,
         "page_size": page_size,
         "total": total,
         "orders": [
             {
                 "order_id": o.id,
+                "order_number": o.order_number,
                 "customer_name": o.customer_name,
                 "phone": o.phone,
                 "order_amount": float(o.order_amount),
@@ -130,4 +162,4 @@ def list_orders(
             }
             for o in orders
         ],
-    }
+    })

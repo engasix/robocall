@@ -35,6 +35,27 @@ def _add_column_if_missing(table: str, column: str, definition: str) -> None:
         print(f"  [added] {table}.{column}")
 
 
+def _add_unique_constraint_if_missing(table: str, constraint_name: str, columns: str) -> None:
+    """Add a unique constraint only if it doesn't already exist."""
+    with engine.connect() as conn:
+        result = conn.execute(text(
+            "SELECT COUNT(*) FROM information_schema.table_constraints "
+            "WHERE table_schema = DATABASE() "
+            "AND table_name = :table AND constraint_name = :name"
+        ), {"table": table, "name": constraint_name})
+        exists = result.scalar() > 0
+
+    if exists:
+        print(f"  [skip]  constraint {constraint_name} already exists")
+    else:
+        with engine.connect() as conn:
+            conn.execute(text(
+                f"ALTER TABLE {table} ADD CONSTRAINT {constraint_name} UNIQUE ({columns})"
+            ))
+            conn.commit()
+        print(f"  [added] constraint {constraint_name} on {table}({columns})")
+
+
 AUDIO_CACHE_DIRS = [
     "amounts/urdu", "amounts/english",
     "names/urdu", "names/english",
@@ -64,6 +85,8 @@ def migrate() -> None:
     _add_column_if_missing("stores", "call_window_end",    "TIME NOT NULL DEFAULT '21:00:00'")
     _add_column_if_missing("orders", "retry_count",        "INT NOT NULL DEFAULT 0")
     _add_column_if_missing("orders", "next_retry_at",      "DATETIME NULL")
+    _add_column_if_missing("orders", "order_number",       "VARCHAR(100) NULL")
+    _add_unique_constraint_if_missing("orders", "uq_store_order_number", "store_id, order_number")
 
 
 def truncate(all_tables: bool = False) -> None:
