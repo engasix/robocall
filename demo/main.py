@@ -112,7 +112,7 @@ def get_orders(
             "store_name": o.store.business_name,
             "order_amount": float(o.order_amount),
             "status": o.status,
-            "retry_count": o.retry_count,
+            "call_attempts": o.call_attempts,
             "created_at": o.created_at.isoformat() if o.created_at else None,
         }
         for o in result

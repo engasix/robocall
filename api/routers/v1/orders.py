@@ -101,7 +101,7 @@ def get_order(
         "phone": order.phone,
         "order_amount": float(order.order_amount),
         "status": order.status,
-        "retry_count": order.retry_count,
+        "call_attempts": order.call_attempts,
         "created_at": order.created_at.isoformat() if order.created_at else None,
         "updated_at": order.updated_at.isoformat() if order.updated_at else None,
     })

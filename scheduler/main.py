@@ -43,13 +43,14 @@ def _process_retries() -> None:
 
         for order in orders:
             try:
-                # Clear next_retry_at before triggering to prevent double-firing
-                # if the scheduler polls again before the webhook updates it.
+                # Increment call_attempts and clear next_retry_at before triggering
+                # to prevent double-firing if scheduler polls again before webhook updates.
+                order.call_attempts += 1
                 order.next_retry_at = None
                 db.commit()
 
                 trigger_call(order_id=order.id, phone=order.phone)
-                log.info(f"Call triggered for order {order.id} (attempt {order.retry_count + 1})")
+                log.info(f"Call triggered for order {order.id} (attempt {order.call_attempts})")
             except Exception as e:
                 log.error(f"Failed to trigger retry for order {order.id}: {e}")
 

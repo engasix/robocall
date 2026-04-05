@@ -12,9 +12,9 @@ router = APIRouter()
 
 _twilio_validator = RequestValidator(config.TWILIO_AUTH_TOKEN)
 
-# Delay in minutes for each retry attempt, indexed by current retry_count
+# Delay in minutes after each failed call, indexed by call_attempts - 1
 RETRY_DELAYS = [30, 60]
-MAX_RETRIES = 2
+MAX_CALLS = 3
 
 async def _validate_twilio_request(request: Request) -> None:
     """Raise 403 if the request did not come from Twilio.
@@ -33,14 +33,14 @@ async def _validate_twilio_request(request: Request) -> None:
         )
 
 
-def _compute_next_retry_at(store, retry_count: int) -> datetime:
+def _compute_next_retry_at(store, call_attempts: int) -> datetime:
     """Calculate next_retry_at in UTC, clamped to the store's calling window.
 
     If the candidate time falls outside the store's window, it is pushed
     forward to the next window open (same day or next day).
     Always returns a timezone-aware UTC datetime.
     """
-    delay_minutes = RETRY_DELAYS[retry_count]
+    delay_minutes = RETRY_DELAYS[call_attempts - 1]
     tz = ZoneInfo(store.timezone)
 
     now_utc = datetime.now(timezone.utc)
@@ -70,14 +70,13 @@ def _compute_next_retry_at(store, retry_count: int) -> datetime:
 
 def _schedule_retry_or_close(order, db, background_tasks: BackgroundTasks) -> None:
     """After a failed call attempt, either schedule the next retry or close the order."""
-    if order.retry_count >= MAX_RETRIES:
+    if order.call_attempts >= MAX_CALLS:
         order.status = "no_response"
         order.next_retry_at = None
         db.commit()
         _maybe_notify(order, background_tasks)
     else:
-        order.next_retry_at = _compute_next_retry_at(order.store, order.retry_count)
-        order.retry_count += 1
+        order.next_retry_at = _compute_next_retry_at(order.store, order.call_attempts)
         db.commit()
 
 

@@ -50,7 +50,8 @@ class Order(Base):
     phone = Column(String(20), nullable=False)
     order_amount = Column(Numeric(10, 2), nullable=False)
     status = Column(Enum("pending", "confirmed", "cancelled", "no_response"), nullable=False, default="pending")
-    retry_count = Column(Integer, nullable=False, default=0)
+    call_attempts = Column(Integer, nullable=False, default=0)  # incremented by scheduler each time a call is fired
+    retry_count = Column(Integer, nullable=False, default=0)    # deprecated — use call_attempts
     next_retry_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
