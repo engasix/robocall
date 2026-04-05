@@ -1,7 +1,7 @@
 """API key management endpoints.
 
 All endpoints require the internal API key (X-Api-Key header).
-Per-store keys generated here are intended for the future public /v1/ API.
+Per-store keys generated here are intended for the public /v1/ API.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -37,9 +37,12 @@ def generate_key(payload: GenerateKeyRequest, db: Session = Depends(database.get
     db.commit()
 
     return {
-        "store_id": store.id,
-        "api_key": raw,
-        "warning": "Save this key — it will not be shown again.",
+        "status": True,
+        "data": {
+            "store_id": store.id,
+            "api_key": raw,
+            "warning": "Save this key — it will not be shown again.",
+        }
     }
 
 
@@ -53,4 +56,4 @@ def revoke_key(payload: RevokeKeyRequest, db: Session = Depends(database.get_db)
     store.api_key_hash = None
     db.commit()
 
-    return {"store_id": store.id, "status": "revoked"}
+    return {"status": True, "data": {"store_id": store.id, "revoked": True}}
