@@ -180,9 +180,9 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 
 ### Phase 8 — Order Placement Endpoint ✅
 - [x] Demo `POST /place-order` — saves order to DB, returns instantly
-- [x] Demo background task calls `POST /orders/process` on the API via httpx
-- [x] API `POST /orders/process` — runs `build_call_audio()`, then triggers call (Phase 6)
-- [x] `GET /api/orders` — returns all orders for dashboard (store filter ready for future)
+- [x] Demo background task calls `build_and_schedule()` directly (Python function, no internal HTTP hop)
+- [x] `build_and_schedule()` in `api/services/order_processor.py` — builds audio then sets `next_retry_at = now`
+- [x] `GET /api/orders` — returns all orders for dashboard (5s polling)
 
 ---
 
@@ -197,19 +197,20 @@ English: "Hello Asif" | "Thanks for placing order on English Scents..." | "one t
 ## Call Flow Summary
 
 ```
-Customer places order on webpage
+Customer places order (Demo UI or POST /v1/orders)
         │
         ▼
-Demo saves order to DB (status: pending) → responds instantly
+Order saved to DB (status: pending, call_attempts: 0)
         │
         ▼
-Demo background task → POST /orders/process to API
+Background task: build_and_schedule()
+  → build_call_audio() — greeting+name | store sentence | amount | key prompt
+  → set next_retry_at = now (signals scheduler to fire immediately)
         │
         ▼
-API: build_call_audio() → greeting+name | store sentence | amount | key prompt
-        │
-        ▼
-API: trigger_call() → Twilio outbound call (Phase 6)
+Scheduler polls every 60s — finds order with next_retry_at <= now
+  → increments call_attempts, clears next_retry_at
+  → trigger_call() → Twilio outbound call
         │
         ▼
 Customer phone rings → answers
@@ -217,12 +218,15 @@ Customer phone rings → answers
         ▼
 Audio plays (personalized message)
         │
-        ├── Presses 1 → confirmed.mp3 → status: confirmed
-        ├── Presses 2 → cancelled.mp3 → status: cancelled
-        └── No response → no_response.mp3 → status: no_response
+        ├── Presses 1 → confirmed → status: confirmed → notify store webhook
+        ├── Presses 2 → cancelled → status: cancelled → notify store webhook
+        └── No input / busy / failed → no_response
+              │
+              ├── call_attempts < 3 → set next_retry_at (30/60/90 min, clamped to calling window)
+              └── call_attempts >= 3 → status: no_response → notify store webhook
         │
         ▼
-Dashboard updates live
+Dashboard updates live (5s polling)
 ```
 
 ---
@@ -259,26 +263,26 @@ uv run generate_static_audio.py
 ---
 
 ### Phase 10 — API Security Layer ✅
-- [x] Generate API keys per store — stored in `stores` table (`api_key_hash`, SHA-256)
-- [x] `X-Api-Key` header authentication on `/orders/process` via `INTERNAL_API_KEY` (demo→API)
-- [x] Rate limiting per API key — 60 req/min sliding window (in-memory, `api/dependencies.py`)
-- [ ] IP whitelisting option per store (optional, for enterprise stores)
-- [x] API key management endpoints:
-  - `POST /auth/generate-key` — generate a new API key for a store
-  - `POST /auth/revoke-key` — revoke an existing key
+- [x] Per-store API key — `api_key_hash` (SHA-256) stored in `stores` table; one key per store
+- [x] Key generated from demo dashboard (Generate API Key button) — raw key shown once, hash stored in DB
+- [x] `X-Api-Key` header authentication on all `/v1/` endpoints via `require_store_api_key` dependency (`api/dependencies.py`)
+- [x] Rate limiting per API key — 60 req/min sliding window (in-memory)
 - [x] Secure Twilio webhooks — validate `X-Twilio-Signature` on all incoming webhook requests
-- [x] Add API key to demo→API communication in `demo/routers/orders.py`
+- [x] Demo calls Python functions directly (no internal HTTP key needed — no dual-key system)
+- [ ] IP whitelisting option per store (optional, for enterprise stores)
 
 ---
 
 ### Phase 11 — Scheduler ✅
-- [x] `scheduler/main.py` — standalone service (runs as separate process)
-- [x] Retry logic — 4 total attempts (1 immediate + 3 retries at 30 / 60 / 90 min intervals)
+- [x] `scheduler/main.py` — standalone service (runs as separate process, systemd: `robocall-scheduler`)
+- [x] Scheduler places ALL calls including the first one — `build_and_schedule()` sets `next_retry_at = now` after audio is built; scheduler fires when ready
+- [x] 4 total attempts: initial + 3 retries at 30 / 60 / 90 min intervals
 - [x] Order stays `pending` during retries — only moves to `no_response` after all attempts exhausted
-- [x] `next_retry_at` calculated in webhook, clamped to store's calling window — scheduler is a dumb loop
+- [x] `next_retry_at` calculated in webhook, clamped to store's calling window — scheduler is a dumb polling loop (60s interval)
 - [x] Per-store calling window (`call_window_start`, `call_window_end` TIME columns on `stores`)
-- [x] Per-store timezone (`timezone` VARCHAR column on `stores`, default `Asia/Karachi`)
-- [x] Track retry attempts in `orders` table (`retry_count`, `next_retry_at` columns)
+- [x] Per-store timezone (`timezone` VARCHAR on `stores`, default `Asia/Karachi`)
+- [x] `call_attempts` column on `orders` — tracks actual calls fired (0 = no call yet); replaces `retry_count`
+- [x] `next_retry_at` column on `orders` — UTC timestamp set by webhook, cleared by scheduler before firing
 - [x] Wire into `main.py` as a subprocess alongside API and Demo
 
 ---
@@ -286,10 +290,12 @@ uv run generate_static_audio.py
 ### Phase 12 — Public API ✅
 - [x] Public-facing REST API for direct integration (`api/routers/v1/orders.py`)
 - [x] Authentication via per-store API key (`X-Api-Key` header — `require_store_api_key` dependency)
+- [x] Standard response format: `{"status": true, "data": ...}` / `{"status": false, "reason": "..."}`
+- [x] Custom exception handlers in `api/main.py` — all errors (HTTPException, validation) follow the same format
 - [x] Endpoints:
-  - `POST /v1/orders` — place an order and trigger a confirmation call
-  - `GET /v1/orders/{order_id}` — get order status (scoped to authenticated store)
-  - `GET /v1/orders` — list all orders (paginated, scoped to authenticated store)
+  - `POST /v1/orders` — place order, triggers confirmation call; `order_number` deduplication per store
+  - `GET /v1/orders/{identifier}` — get order by internal ID (int) or `order_number` (string)
+  - `GET /v1/orders` — list orders (paginated, scoped to authenticated store)
 - [x] API documentation (Swagger/OpenAPI — auto-generated by FastAPI at `/docs`)
 - [x] Outgoing webhooks — `webhook_url` column on stores; status updates POSTed as background task via `api/services/store_notify.py`
 - [ ] SDK (future) — Python and JavaScript client libraries
