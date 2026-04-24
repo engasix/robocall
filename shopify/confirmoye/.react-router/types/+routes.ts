@@ -20,6 +20,9 @@ type Pages = {
   "/webhooks/app/uninstalled": {
     params: {};
   };
+  "/webhooks/orders/create": {
+    params: {};
+  };
   "/auth/login": {
     params: {};
   };
@@ -31,7 +34,7 @@ type Pages = {
   "/app": {
     params: {};
   };
-  "/app/additional": {
+  "/app/settings": {
     params: {};
   };
 };
@@ -39,7 +42,7 @@ type Pages = {
 type RouteFiles = {
   "root.jsx": {
     id: "root";
-    page: "/" | "/webhooks/app/scopes_update" | "/webhooks/app/uninstalled" | "/auth/login" | "/auth/*" | "/app" | "/app/additional";
+    page: "/" | "/webhooks/app/scopes_update" | "/webhooks/app/uninstalled" | "/webhooks/orders/create" | "/auth/login" | "/auth/*" | "/app" | "/app/settings";
   };
   "routes/webhooks.app.scopes_update.jsx": {
     id: "routes/webhooks.app.scopes_update";
@@ -48,6 +51,10 @@ type RouteFiles = {
   "routes/webhooks.app.uninstalled.jsx": {
     id: "routes/webhooks.app.uninstalled";
     page: "/webhooks/app/uninstalled";
+  };
+  "routes/webhooks.orders.create.jsx": {
+    id: "routes/webhooks.orders.create";
+    page: "/webhooks/orders/create";
   };
   "routes/auth.login/route.jsx": {
     id: "routes/auth.login";
@@ -63,11 +70,11 @@ type RouteFiles = {
   };
   "routes/app.jsx": {
     id: "routes/app";
-    page: "/app" | "/app/additional";
+    page: "/app" | "/app/settings";
   };
-  "routes/app.additional.jsx": {
-    id: "routes/app.additional";
-    page: "/app/additional";
+  "routes/app.settings.jsx": {
+    id: "routes/app.settings";
+    page: "/app/settings";
   };
   "routes/app._index.jsx": {
     id: "routes/app._index";
@@ -79,10 +86,11 @@ type RouteModules = {
   "root": typeof import("./app/root.jsx");
   "routes/webhooks.app.scopes_update": typeof import("./app/routes/webhooks.app.scopes_update.jsx");
   "routes/webhooks.app.uninstalled": typeof import("./app/routes/webhooks.app.uninstalled.jsx");
+  "routes/webhooks.orders.create": typeof import("./app/routes/webhooks.orders.create.jsx");
   "routes/auth.login": typeof import("./app/routes/auth.login/route.jsx");
   "routes/_index": typeof import("./app/routes/_index/route.jsx");
   "routes/auth.$": typeof import("./app/routes/auth.$.jsx");
   "routes/app": typeof import("./app/routes/app.jsx");
-  "routes/app.additional": typeof import("./app/routes/app.additional.jsx");
+  "routes/app.settings": typeof import("./app/routes/app.settings.jsx");
   "routes/app._index": typeof import("./app/routes/app._index.jsx");
 };
